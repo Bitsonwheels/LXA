@@ -484,7 +484,12 @@ const serverOptions: Parameters<typeof Bun.serve<ProxySocketData>>[0] = {
       };
 
       upstream.onclose = (event) => {
-        client.close(event.code || 1000, event.reason);
+        // Reserved close codes (1004-1006, "no status") make Bun's close()
+        // throw; forward them as 1000.
+        client.close(
+          event.code >= 1004 && event.code <= 1006 ? 1000 : event.code,
+          event.reason,
+        );
       };
     },
     message(client, message) {
@@ -513,7 +518,8 @@ const serverOptions: Parameters<typeof Bun.serve<ProxySocketData>>[0] = {
       }
 
       if (upstream.readyState === WebSocket.OPEN || upstream.readyState === WebSocket.CONNECTING) {
-        upstream.close(code, reason);
+        // Same reserved-code guard as the upstream.onclose leg above.
+        upstream.close(code >= 1004 && code <= 1006 ? 1000 : code, reason);
       }
     },
     maxPayloadLength: 64 * 1024 * 1024,
