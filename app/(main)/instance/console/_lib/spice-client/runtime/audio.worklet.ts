@@ -25,6 +25,12 @@ class SpiceAudioSinkProcessor extends AudioWorkletProcessor {
   private readonly queue: QueuedPcmChunk[] = [];
   private gain = 1;
   private muted = false;
+  // Cap for queued PCM: the queue only drains at realtime, so a suspended or
+  // autoplay-blocked context would otherwise buffer incoming audio forever.
+  // ~4 MB is roughly 20 s of 44.1 kHz stereo and per-chunk drops lose at most
+  // one chunk of stale audio.
+  private static readonly MAX_QUEUED_BYTES = 4 * 1024 * 1024;
+  private queuedBytes = 0;
 
   constructor() {
     super();
@@ -39,11 +45,22 @@ class SpiceAudioSinkProcessor extends AudioWorkletProcessor {
       switch (message.type) {
         case 'chunk':
           if (message.pcm && message.channels && message.channels > 0) {
-            this.queue.push({
+            const chunk = {
               samples: new Int16Array(message.pcm),
               channels: Math.max(1, Math.floor(message.channels)),
               offsetFrames: 0,
-            });
+            };
+            this.queuedBytes += chunk.samples.byteLength;
+            // Drop oldest-first when over cap; freshest audio is more useful
+            // than a growing backlog of jitter.
+            while (
+              this.queuedBytes > SpiceAudioSinkProcessor.MAX_QUEUED_BYTES &&
+              this.queue.length > 0
+            ) {
+              const dropped = this.queue.shift()!;
+              this.queuedBytes -= dropped.samples.byteLength - dropped.offsetFrames * dropped.channels * 2;
+            }
+            this.queue.push(chunk);
           }
           break;
         case 'volume':
@@ -56,6 +73,7 @@ class SpiceAudioSinkProcessor extends AudioWorkletProcessor {
           break;
         case 'reset':
           this.queue.length = 0;
+          this.queuedBytes = 0;
           break;
       }
     };
@@ -87,6 +105,7 @@ class SpiceAudioSinkProcessor extends AudioWorkletProcessor {
       chunk.offsetFrames += 1;
       if (chunk.offsetFrames * chunk.channels >= chunk.samples.length) {
         this.queue.shift();
+        this.queuedBytes -= chunk.samples.byteLength;
       }
     }
 
