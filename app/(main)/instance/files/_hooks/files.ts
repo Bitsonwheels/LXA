@@ -444,6 +444,16 @@ export function useFiles(
         const batch = await Promise.all(
           slice.map(async (name) => {
             const fullPath = joinAbsPath(parent, name);
+            // Cached types short-circuit the HEAD so re-opening the picker on
+            // an already browsed directory does not re-probe every entry.
+            const cachedType = incusClient.instanceFiles
+              .getCachedMetadata({ instanceName, project, path: fullPath })
+              ?.type?.toLowerCase();
+            if (cachedType) {
+              return cachedType === 'directory' || cachedType === 'symlink'
+                ? fullPath
+                : null;
+            }
             try {
               const metadata = await incusClient.instanceFiles.getMetadata({
                 instanceName,
