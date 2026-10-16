@@ -1,5 +1,6 @@
 'use client';
 
+import { operationPath, waitForOperation } from '../actions';
 import { instanceKey } from '../../../keys';
 import { resourceKeys } from '../../../resources';
 import type { RequestRegistry } from '../../../requests';
@@ -43,6 +44,9 @@ export async function ensureInstanceSnapshots(
   if (!shouldFetchStoredStatus(collection.status)) return;
 
   await requests.run(`instance:snapshots:${key}`, [collectionKey], async () => {
+    // Fencing: see backups/ensure.ts — a fetch invalidated mid-flight must not
+    // publish pre-invalidation data as fresh.
+    const startVersion = store.getKeyVersion(collectionKey);
     try {
       const response = await requestJson<InstanceSnapshot[]>(
         `/1.0/instances/${encodeURIComponent(request.instanceName)}/snapshots`,
@@ -53,6 +57,15 @@ export async function ensureInstanceSnapshots(
           },
         },
       );
+
+      if (store.getKeyVersion(collectionKey) !== startVersion) {
+        store.update((state) => {
+          const instance = state.instances.items[key];
+          if (!instance) return;
+          instance.snapshots.collection = { status: 'stale' };
+        }, [collectionKey]);
+        return;
+      }
 
       store.update((state) => {
         const instance = state.instances.items[key] ?? store.ensureInstance(key);
@@ -142,6 +155,7 @@ export function createInstanceSnapshotsResource(
           init: { method: 'DELETE' },
         },
       );
+      await waitForOperation(operationPath(response), request.project);
       store.update((state) => {
         const instance = state.instances.items[key];
         if (!instance) return;

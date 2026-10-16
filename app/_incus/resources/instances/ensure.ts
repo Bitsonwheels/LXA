@@ -149,13 +149,21 @@ export function instanceKeysForProject(
       return itemProject !== 'all' &&
         (item.metadata.status !== 'error' || item.metadata.data !== undefined);
     })
-    .sort(([aKey, aItem], [bKey, bItem]) => {
-      const a = shellInstanceFromKey(aKey, aItem);
-      const b = shellInstanceFromKey(bKey, bItem);
-      const projectCompare = (a.project ?? '').localeCompare(b.project ?? '');
-      return projectCompare || a.name.localeCompare(b.name);
+    // Sort by precomputed sort keys: building a full shell Instance per
+    // comparison turned every instance event into O(n log n) object churn.
+    .map(([key, item]) => {
+      const { project: itemProject, name } = splitInstanceKey(key);
+      const metadata = item.metadata.data;
+      return {
+        key,
+        project: metadata?.project ?? itemProject,
+        name: metadata?.name ?? name,
+      };
     })
-    .map(([key]) => key);
+    .sort((a, b) =>
+      a.project.localeCompare(b.project) || a.name.localeCompare(b.name),
+    )
+    .map(({ key }) => key);
 }
 
 export function visibleInstanceKeys(
@@ -450,11 +458,12 @@ async function ensureInstanceCollectionPayloads(
     strategy: 'filtered-recursive-collection',
   });
 
-  await Promise.all(
-    chunks.map((chunk) => {
-      const affectedTargetKeys = targets.filter((key) =>
-        chunk.includes(splitInstanceKey(key).name),
-      );
+  // Bound concurrent Incus GETs independent of fleet size; one request per
+  // ~24-name chunk still grows linearly in the number of instances.
+  await mapWithConcurrency(chunks, 4, (chunk) => {
+    const affectedTargetKeys = targets.filter((key) =>
+      chunk.includes(splitInstanceKey(key).name),
+    );
       const affectedKeys = affectedTargetKeys.flatMap((key) => [
         resourceKeys.instanceMetadata(key),
         ...(recursion >= 2 ? [resourceKeys.instanceState(key)] : []),
@@ -465,6 +474,10 @@ async function ensureInstanceCollectionPayloads(
         affectedKeys,
         async () => {
           try {
+            // Guard against reviving instances whose delete event lands while
+            // this GET is in flight: keys known at start but gone at commit
+            // time were deleted concurrently.
+            const knownAtStart = new Set(Object.keys(store.getSnapshot().state.instances.items));
             const response = await requestJson<Instance[]>('/1.0/instances', {
               params: paramsForProject(project, {
                 recursion,
@@ -477,10 +490,14 @@ async function ensureInstanceCollectionPayloads(
 
             store.update((state) => {
               for (const instance of response.metadata) {
+                const payloadKey = collectionPayloadKey(project, instance);
+                if (knownAtStart.has(payloadKey) && !state.instances.items[payloadKey]) {
+                  continue;
+                }
                 upsertInstancePayload(
                   state,
                   store,
-                  collectionPayloadKey(project, instance),
+                  payloadKey,
                   instance,
                 );
               }
@@ -532,8 +549,7 @@ async function ensureInstanceCollectionPayloads(
           }
         },
       );
-    }),
-  );
+    });
 }
 
 async function ensureInstanceState(

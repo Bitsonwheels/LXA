@@ -1,5 +1,6 @@
 'use client';
 
+import { operationPath, waitForOperation } from '../actions';
 import { instanceKey } from '../../../keys';
 import { resourceKeys } from '../../../resources';
 import type { RequestRegistry } from '../../../requests';
@@ -40,6 +41,10 @@ export async function ensureInstanceBackups(
   if (!shouldFetchStoredStatus(collection.status)) return;
 
   await requests.run(`instance:backups:${key}`, [collectionKey], async () => {
+    // Fencing: if the collection was invalidated while this fetch was in
+    // flight, the response predates the invalidation. Publish it only as
+    // 'stale' so the owning hook refetches instead of trusting old data.
+    const startVersion = store.getKeyVersion(collectionKey);
     try {
       const response = await requestJson<InstanceBackup[]>(
         `/1.0/instances/${encodeURIComponent(request.instanceName)}/backups`,
@@ -50,6 +55,15 @@ export async function ensureInstanceBackups(
           },
         },
       );
+
+      if (store.getKeyVersion(collectionKey) !== startVersion) {
+        store.update((state) => {
+          const instance = state.instances.items[key];
+          if (!instance) return;
+          instance.backups.collection = { status: 'stale' };
+        }, [collectionKey]);
+        return;
+      }
 
       store.update((state) => {
         const instance = state.instances.items[key] ?? store.ensureInstance(key);
@@ -144,6 +158,7 @@ export function createInstanceBackupsResource(
           init: { method: 'DELETE' },
         },
       );
+      await waitForOperation(operationPath(response), request.project);
       store.update((state) => {
         const instance = state.instances.items[backupIdentity(request).key];
         if (!instance) return;

@@ -204,7 +204,10 @@ function staleInstance(instance: InstanceItem): InstanceItem {
           name,
           {
             metadata: staleCached(log.metadata),
-            content: staleCached(log.content),
+            // Persisted/restored caches deliberately drop log bodies; the
+            // viewer refetches on demand, otherwise localStorage grows
+            // without bound.
+            content: { status: 'missing' },
           },
         ]),
       ),
@@ -222,7 +225,8 @@ function staleInstance(instance: InstanceItem): InstanceItem {
                   error: file.children.error,
                 }
               : undefined,
-            content: file.content ? staleCached(file.content) : undefined,
+            // File bodies are also dropped on persist; see the logs note above.
+            content: undefined,
           },
         ]),
       ),
@@ -425,22 +429,19 @@ export function scheduleIncusStatePersistence(state: IncusStoreState) {
   // Persistence is intentionally delayed so rapid data updates do not turn into
   // a burst of synchronous localStorage writes.
   pendingSave = window.setTimeout(() => {
+      const savedAt = new Date().toISOString();
+      const projected = stalePersistedState({ ...state, version: 1 as const, savedAt });
+      // Persist the stale projection, not the raw live store: statuses are
+      // re-staled on load anyway, and the projection keeps file and log
+      // contents out of localStorage so the cache cannot grow without bound.
       const payload: PersistedIncusState = {
         version: 1,
-        savedAt: new Date().toISOString(),
-        server: state.server,
-        certificates: state.certificates,
-        images: state.images,
-        networks: state.networks,
-        networkZones: state.networkZones,
-        networkIntegrations: state.networkIntegrations,
-        clusterGroups: state.clusterGroups,
-        storagePools: state.storagePools,
-      projects: state.projects,
-      profiles: state.profiles,
-      operations: state.operations,
-      instances: state.instances,
-    };
+        savedAt,
+        ...projected,
+        storagePools:
+          projected.storagePools ??
+          { collection: { status: 'missing' }, items: {} },
+      };
 
     try {
       window.localStorage.setItem(PERSISTENCE_KEY, JSON.stringify(payload));
@@ -454,7 +455,10 @@ export function scheduleIncusStatePersistence(state: IncusStoreState) {
         instanceCount: Object.keys(state.instances.items).length,
       });
     } catch (error) {
+      // Must not die silently: a full localStorage makes every later cache
+      // write fail; surface it at least once in the browser console.
       debugIncusData('persistence:save-error', error);
+      console.warn('Ararat: could not persist Incus cache to localStorage.', error);
     }
   }, PERSIST_DEBOUNCE_MS);
 }

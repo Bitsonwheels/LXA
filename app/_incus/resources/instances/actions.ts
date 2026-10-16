@@ -32,7 +32,7 @@ export interface CloneInstanceInput {
   instanceOnly: boolean;
 }
 
-function operationPath(payload: OperationLike | null | undefined) {
+export function operationPath(payload: OperationLike | null | undefined) {
   const maybeOperation = payload as { operation?: unknown } | null | undefined;
   return typeof maybeOperation?.operation === 'string'
     ? maybeOperation.operation
@@ -97,7 +97,7 @@ function buildInstanceUpdateBody({
   };
 }
 
-async function waitForOperation(
+export async function waitForOperation(
   operation: string | undefined,
   project?: string | null,
   signal?: AbortSignal,

@@ -233,6 +233,11 @@ export class IncusStore {
 
   getSnapshot = () => this.snapshot;
 
+  // Fencing token for async fetches: every `update` that lists a key bumps its
+  // version. A fetch can capture the version before its HTTP call and refuse to
+  // publish a payload that was already invalidated mid-flight.
+  getKeyVersion = (key: IncusStoreKey) => this.keyVersions.get(key) ?? 0;
+
   getSnapshotForKeys = (keys: IncusStoreKey[]) => {
     const signature = keys
       .map((key) => `${key}:${this.keyVersions.get(key) ?? 0}`)

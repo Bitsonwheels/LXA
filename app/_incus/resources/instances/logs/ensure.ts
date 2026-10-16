@@ -64,12 +64,19 @@ export async function ensureInstanceLogs(
   if (!shouldFetchStoredStatus(collection.status)) return;
 
   await requests.run(`instance:logs:${key}`, [collectionKey], async () => {
+    // Fencing: see backups/ensure.ts — a fetch invalidated mid-flight must not
+    // publish pre-invalidation data as fresh.
+    const startVersion = store.getKeyVersion(collectionKey);
     try {
       const logs = await requestLogList(request.instanceName, project);
       const logSet = new Set(logs);
       store.update(
         (state) => {
           const instance = state.instances.items[key] ?? store.ensureInstance(key);
+          if (store.getKeyVersion(collectionKey) !== startVersion) {
+            instance.logs.collection = { status: 'stale' };
+            return;
+          }
           instance.logs.collection = { status: 'ready' };
           for (const existingLog of Object.keys(instance.logs.items)) {
             if (!logSet.has(existingLog)) {
