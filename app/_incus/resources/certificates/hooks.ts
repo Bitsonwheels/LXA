@@ -22,7 +22,9 @@ export function useCertificateResource(fingerprint: string | undefined) {
   React.useEffect(() => {
     if (!fingerprint) return;
     void client.certificates.ensure(fingerprint);
-  }, [client, fingerprint, cached?.status]);
+    // Re-ensure on every write to this item (version, not the status string) —
+    // same reasoning as snapshots/hooks.ts.
+  }, [client, fingerprint, snapshot.version]);
 
   const status = deriveResourceStatus({
     storedStatus: cached?.status ?? 'missing',

@@ -29,9 +29,9 @@ export function useInstanceBackups(
 
   React.useEffect(() => {
     void client.instanceBackups.ensure({ instanceName, project });
-    // Re-ensure on every collection-status flip ('stale'/'missing'/'error') so
-    // event-driven invalidations actually refetch instead of staying stale.
-  }, [client, instanceName, project, collection.status]);
+    // Re-ensure on every write to this collection (version, not the status
+    // string) — same reasoning as snapshots/hooks.ts.
+  }, [client, instanceName, project, snapshot.version]);
 
   const status = deriveResourceStatus({
     storedStatus: collection.status,

@@ -7,7 +7,6 @@ import {
   combineResourceStatuses,
   deriveResourceStatus,
   resourceStatusFlags,
-  shouldFetchStoredStatus,
 } from '../../status';
 import type { IncusOperation } from '../../types';
 import { useIncusResourceSnapshot } from '../../use-resource-snapshot';
@@ -40,9 +39,11 @@ export function useOperations(request: UseOperationsRequest = {}) {
   const collection = snapshot.state.operations.collection;
 
   React.useEffect(() => {
-    if (!shouldFetchStoredStatus(collection.status)) return;
     void client.operations.ensureList();
-  }, [client, collection.status]);
+    // Re-ensure on every write to the subscribed keys (version, not the status
+    // string) — same reasoning as snapshots/hooks.ts. ensureList gates on the
+    // stored status itself.
+  }, [client, snapshot.version]);
 
   const items = React.useMemo(
     () =>

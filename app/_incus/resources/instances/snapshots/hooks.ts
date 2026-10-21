@@ -29,9 +29,12 @@ export function useInstanceSnapshots(
 
   React.useEffect(() => {
     void client.instanceSnapshots.ensure({ instanceName, project });
-    // Re-ensure on every collection-status flip ('stale'/'missing'/'error') so
-    // event-driven invalidations actually refetch instead of staying stale.
-  }, [client, instanceName, project, collection.status]);
+    // Re-ensure on every write to this collection (version, not the status
+    // string): a fencing discard during a refetch re-marks 'stale' without a
+    // status flip, which would otherwise leave a mutation's list stuck on old
+    // data. The ensure's readiness gate keeps 'ready' publishes from
+    // re-fetching. Same pattern as useStoragePools.
+  }, [client, instanceName, project, snapshot.version]);
 
   const status = deriveResourceStatus({
     storedStatus: collection.status,
