@@ -213,7 +213,7 @@ export default function Sidebar({
     >
       <SidebarHeader>
         <div className="flex w-full mt-4 group-data-[collapsible=icon]:mt-0">
-          <p className="font-semibold font-[Poppins] translate-y-0.5 text-[30px] leading-0 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:translate-y-0 group-data-[collapsible=icon]:text-[14px] group-data-[collapsible=icon]:tracking-tight">
+          <p className="font-semibold font-[Poppins] translate-y-0.5 text-[30px] leading-0 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:translate-y-0 group-data-[collapsible=icon]:text-[14px] group-data-[collapsible=icon]:leading-none group-data-[collapsible=icon]:tracking-tight">
             LXA
           </p>
         </div>

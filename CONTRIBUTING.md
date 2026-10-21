@@ -10,6 +10,18 @@ If you find a bug or have a feature request, please open an issue using the prov
 2. Commit your changes and ensure they are signed-off (see DCO below).
 3. Push your branch to your fork and submit a Pull Request.
 
+## Local Development Certificates
+The development proxy authenticates against Incus with a client certificate. Those files are gitignored and expected in the repository root as `lxa.crt` and `lxa.pfx` — they were named `ararat.crt` / `ararat.pfx` before the LXA rename, so rename existing files or generate new ones. `devProxy.ts` falls back to `./lxa.pfx`; override it with `DEV_PROXY_UPSTREAM_CLIENT_PFX_PATH`.
+
+## Brand Assets
+`assets/lxa-wordmark.svg` is the source of the LXA wordmark. `app/favicon.ico` and `public/images/logo.png` are derived from it — rebuild both with:
+
+```bash
+bun run brand:build
+```
+
+The script needs `rsvg-convert` (librsvg) and the Poppins Bold font installed.
+
 ## Developer Certificate of Origin (DCO 1.1)
 To ensure that all contributions are properly licensed, we require that all commits be signed off under the Developer Certificate of Origin 1.1.
 

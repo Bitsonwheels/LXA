@@ -62,13 +62,13 @@ Use this path if you want to install a ready-made LXA UI build.
 #### Prerequisites
 
 - A working Incus installation accessible over the network
-- A copy of `lxa.tar.gz` from either the latest official release or the bleeding-edge `yerek` build artifact
+- A copy of the UI archive from either the latest official release or the bleeding-edge `yerek` build artifact
 
 #### Installation Instructions
 
 1. Download an LXA UI archive:
-   - **Latest official release:** download `lxa.tar.gz` from the [latest GitHub Release](https://github.com/hyecompany/ararat-web/releases/latest). This is the recommended path for most users.
-   - **Bleeding edge:** download the `lxa.tar.gz` artifact from a successful `yerek` branch run of the [Build UI workflow](https://github.com/hyecompany/ararat-web/actions/workflows/ui-build.yml). GitHub Actions downloads artifacts as zip files, so unzip the download first to get `lxa.tar.gz`.
+   - **Latest official release:** download the release asset from the [latest GitHub Release](https://github.com/hyecompany/ararat-web/releases/latest). The official release channel is still hosted in the upstream repository, so its archive is still named `ararat.tar.gz.zip` — unzip it to get `ararat.tar.gz`. This is the recommended path for most users.
+   - **Bleeding edge:** download the `lxa.tar.gz` artifact from a successful `yerek` branch run of the [Build UI workflow](https://github.com/Bitsonwheels/LXA/actions/workflows/ui-build.yml). GitHub Actions downloads artifacts as zip files, so unzip the download first to get `lxa.tar.gz`.
 
 2. Extract the archive into Incus's UI directory. Zabbly package users can use `/opt/incus/ui`:
 
@@ -76,6 +76,8 @@ Use this path if you want to install a ready-made LXA UI build.
    sudo mkdir -p /opt/incus/ui
    sudo tar -xzf lxa.tar.gz -C /opt/incus/ui
    ```
+
+   Use the archive name from step 1: `lxa.tar.gz` for the bleeding-edge build, `ararat.tar.gz` for the official release.
 
    Users of other packages can extract LXA anywhere they prefer, then set `INCUS_UI` in the `incusd` environment to that path.
 

@@ -237,7 +237,7 @@ export default function CreateCertificate() {
                         &quot;lxa.pfx&quot; file previously downloaded.
                       </p>
                       <p>
-                        4. Restart Chrome and navigate to LXA. Select the LXA certificate.
+                        4. Restart Chrome and navigate to LXA. Select the certificate you just imported.
                       </p>
                     </AccordionContent>
                   </AccordionItem>
@@ -254,7 +254,7 @@ export default function CreateCertificate() {
                         been set.
                       </p>
                       <p>
-                        3. Restart Chrome and navigate to LXA. Select the LXA certificate.
+                        3. Restart Chrome and navigate to LXA. Select the certificate you just imported.
                       </p>
                     </AccordionContent>
                   </AccordionItem>
@@ -274,7 +274,7 @@ export default function CreateCertificate() {
                   select the previously downloaded &quot;lxa.pfx&quot; file. Enter your password
                   when prompted, or leave blank if one has not been set.
                 </p>
-                <p>4. Restart Firefox and navigate to LXA. Select the LXA certificate.</p>
+                <p>4. Restart Firefox and navigate to LXA. Select the certificate you just imported.</p>
               </TabsContent>
               <TabsContent value="edge">
                 <p>1. Go to the following address:</p>
@@ -298,7 +298,7 @@ export default function CreateCertificate() {
                   5. Click &quot;Finish&quot;, &quot;Close&quot;, navigate back to LXA, click
                   the lock or &quot;Not Secure&quot; icon in the address bar, then &quot;Your
                   certificate choices&quot;, then &quot;Change certificate&quot;, then click
-                  &quot;Change&quot;, and select the LXA certificate you just imported.
+                  &quot;Change&quot;, and select the certificate you just imported.
                 </p>
               </TabsContent>
               <TabsContent value="macOS">
@@ -308,7 +308,7 @@ export default function CreateCertificate() {
                   &quot;lxa.pfx&quot; file.
                 </p>
                 <p>
-                  3. Restart your browser and navigate to LXA. Select the LXA certificate.
+                  3. Restart your browser and navigate to LXA. Select the certificate you just imported.
                 </p>
               </TabsContent>
             </Tabs>

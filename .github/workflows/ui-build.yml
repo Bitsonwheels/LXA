@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - yerek
+  # This repository is a fork of the upstream; the push to `yerek` did not start
+  # a build there, so the UI archive is produced through a manual dispatch.
+  workflow_dispatch:
 
 permissions:
   contents: read
