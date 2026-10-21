@@ -103,22 +103,45 @@ export async function waitForOperation(
   signal?: AbortSignal,
 ) {
   if (!operation) return;
-  const waitUrl = new URL(`${operation}/wait`, window.location.origin);
-  waitUrl.searchParams.set('timeout', '30');
-  if (project && !waitUrl.searchParams.has('project')) {
-    waitUrl.searchParams.set('project', project);
-  }
-  const response = await requestIncusJson<StandardResponse<{
-    status?: string;
-    status_code?: number;
-    err?: string;
-  }>>(`${waitUrl.pathname}${waitUrl.search}`, { init: { signal } });
-  const metadata = response.metadata;
-  if (metadata.status_code === 400 || metadata.status === 'Failure') {
-    throw new Error(metadata.err || 'Operation failed.');
-  }
-  if (metadata.status_code === 401 || metadata.status === 'Cancelled') {
-    throw new Error(metadata.err || 'Operation was cancelled.');
+  for (;;) {
+    const waitUrl = new URL(`${operation}/wait`, window.location.origin);
+    waitUrl.searchParams.set('timeout', '30');
+    if (project && !waitUrl.searchParams.has('project')) {
+      waitUrl.searchParams.set('project', project);
+    }
+    const response = await requestIncusJson<StandardResponse<{
+      status?: string;
+      status_code?: number;
+      err?: string;
+    }>>(`${waitUrl.pathname}${waitUrl.search}`, { init: { signal } });
+    const metadata = response.metadata;
+    if (metadata.status_code === 400 || metadata.status === 'Failure') {
+      throw new Error(metadata.err || 'Operation failed.');
+    }
+    if (metadata.status_code === 401 || metadata.status === 'Cancelled') {
+      throw new Error(metadata.err || 'Operation was cancelled.');
+    }
+    if (
+      metadata.status_code === 200 ||
+      metadata.status === 'Success' ||
+      metadata.status === 'Done'
+    ) {
+      return;
+    }
+    // /wait returns the operation's CURRENT state when the server-side
+    // timeout expires (e.g. 103 Running) — long backups on slow storage
+    // outlast 30s, so keep polling until a terminal state instead of
+    // returning prematurely. ponytail: a truly stuck operation polls
+    // forever here; upgrade path = progress display + cancel.
+    if (
+      metadata.status_code === 100 ||
+      metadata.status === 'Pending' ||
+      metadata.status_code === 103 ||
+      metadata.status === 'Running'
+    ) {
+      continue;
+    }
+    return;
   }
 }
 

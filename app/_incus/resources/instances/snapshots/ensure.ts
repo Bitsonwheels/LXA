@@ -142,6 +142,10 @@ export function createInstanceSnapshotsResource(
           },
         },
       );
+      // Wait for incusd to actually finish, then flag stale — a refetch before
+      // the new snapshot exists would flip the list back to 'ready' and it
+      // would never refresh again (same reason as delete below).
+      await waitForOperation(operationPath(response), request.project);
       markInstanceSnapshotsStale(store, request);
       return response;
     },
@@ -182,6 +186,8 @@ export function createInstanceSnapshotsResource(
           },
         },
       );
+      // Same operation-completion rule as create/delete above.
+      await waitForOperation(operationPath(response), request.project);
       markInstanceSnapshotsStale(store, request);
       return response;
     },
@@ -221,6 +227,9 @@ export function createInstanceSnapshotsResource(
           },
         },
       );
+      // Same operation-completion rule as delete below: flag stale only once
+      // incusd really finished, otherwise the refetch shows the old list.
+      await waitForOperation(operationPath(response), request.project);
       markInstanceSnapshotsStale(store, request);
       return response;
     },

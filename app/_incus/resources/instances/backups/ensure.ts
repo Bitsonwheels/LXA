@@ -145,6 +145,9 @@ export function createInstanceBackupsResource(
           },
         },
       );
+      // Same operation-completion rule as delete below: only flag stale once
+      // incusd has actually created the backup, so the refetch sees it.
+      await waitForOperation(operationPath(response), request.project);
       markInstanceBackupsStale(store, request);
       return response;
     },
@@ -186,6 +189,8 @@ export function createInstanceBackupsResource(
           },
         },
       );
+      // Same operation-completion rule as delete above.
+      await waitForOperation(operationPath(response), request.project);
       markInstanceBackupsStale(store, request);
       return response;
     },
