@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500">
-  <!-- LXA wordmark. Source of truth for app/favicon.ico and public/images/logo.png.
-       Rebuild both with: bun run brand:build -->
-  <text x="250" y="338" font-family="Poppins" font-weight="700" font-size="250"
-        text-anchor="middle" letter-spacing="-6">
-    <tspan fill="#E86058">L</tspan><tspan fill="#5070F8">X</tspan><tspan fill="#F8B800">A</tspan>
-  </text>
-</svg>

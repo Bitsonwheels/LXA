@@ -14,13 +14,13 @@ If you find a bug or have a feature request, please open an issue using the prov
 The development proxy authenticates against Incus with a client certificate. Those files are gitignored and expected in the repository root as `lxa.crt` and `lxa.pfx` — they were named `ararat.crt` / `ararat.pfx` before the LXA rename, so rename existing files or generate new ones. `devProxy.ts` falls back to `./lxa.pfx`; override it with `DEV_PROXY_UPSTREAM_CLIENT_PFX_PATH`.
 
 ## Brand Assets
-`assets/lxa-wordmark.svg` is the source of the LXA wordmark. `app/favicon.ico` and `public/images/logo.png` are derived from it — rebuild both with:
+`public/images/LXA.png` (light), `LXA-Logo-DarkMode.png` and `LXA-Logo-Stacked.png` are the designer-supplied master files. The sidebar wordmark (`lxa-logo.png` / `lxa-logo-dark.png`, the dark artwork has its solid background keyed to alpha), the theme-aware favicon PNGs (`favicon-light.png` / `favicon-dark.png`) and `app/favicon.ico` are derived from them — rebuild the derived files with:
 
 ```bash
 bun run brand:build
 ```
 
-The script needs `rsvg-convert` (librsvg) and the Poppins Bold font installed.
+The script needs `sharp`, which Next.js ships as an optional dependency.
 
 ## Developer Certificate of Origin (DCO 1.1)
 To ensure that all contributions are properly licensed, we require that all commits be signed off under the Developer Certificate of Origin 1.1.

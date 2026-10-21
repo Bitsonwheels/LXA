@@ -6,32 +6,68 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
  */
 
-// Renders assets/lxa-wordmark.svg into the two derived brand files:
-//   app/favicon.ico      256px PNG wrapped in an ICO container
-//   public/images/logo.png  500px PNG
-// Requires rsvg-convert (librsvg) on PATH; Poppins Bold must be installed as a system font.
+// Renders the designer-supplied master assets into the derived files:
+//   public/images/lxa-logo.png        trimmed light wordmark (sidebar light mode)
+//   public/images/lxa-logo-dark.png   trimmed dark wordmark, solid background keyed to alpha (sidebar dark mode)
+//   public/images/favicon-light.png   square-padded favicon for light mode
+//   public/images/favicon-dark.png    square-padded favicon for dark mode
+//   app/favicon.ico                   ICO container around the dark 256px PNG (pre-JS default)
+// Requires sharp, which Next.js provides as an optional dependency.
 
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import sharp from 'sharp';
 
 const repoRoot = join(import.meta.dir, '..');
-const source = join(repoRoot, 'assets', 'lxa-wordmark.svg');
-const workDir = mkdtempSync(join(tmpdir(), 'lxa-brand-'));
+const lightSource = join(repoRoot, 'public', 'images', 'LXA.png');
+const darkSource = join(repoRoot, 'public', 'images', 'LXA-Logo-DarkMode.png');
 
-function render(size: number): Buffer {
-  const out = join(workDir, `lxa-${size}.png`);
-  try {
-    execFileSync('rsvg-convert', ['-w', String(size), '-h', String(size), source, '-o', out], {
-      stdio: 'inherit',
-    });
-  } catch {
-    throw new Error(
-      'rsvg-convert not found. Install librsvg2-bin and the Poppins Bold font, then re-run.',
-    );
+// The dark artwork ships with an opaque #2B2B2B background. Key it to alpha with a
+// distance ramp so antialiased edges stay smooth on any sidebar/tab background.
+const DARK_BG = 43;
+
+async function loadRgba(file: string) {
+  const { data, info } = await sharp(file)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  return { data, width: info.width, height: info.height };
+}
+
+function keyDarkBackground({ data, width, height }: Awaited<ReturnType<typeof loadRgba>>) {
+  for (let i = 0; i < width * height; i++) {
+    const r = data[i * 4];
+    const g = data[i * 4 + 1];
+    const b = data[i * 4 + 2];
+    const distance = Math.max(Math.abs(r - DARK_BG), Math.abs(g - DARK_BG), Math.abs(b - DARK_BG));
+    data[i * 4 + 3] = Math.max(0, Math.min(255, (distance - 10) * 8));
   }
-  return readFileSync(out);
+  return sharp(data, { raw: { width, height, channels: 4 } });
+}
+
+// Sidebar wordmarks: crop to content, keep a 128px tall bitmap for crisp retina.
+function wordmark(source: sharp.Sharp) {
+  return source.trim({ threshold: 12 }).resize({ height: 128, fit: 'inside' }).png();
+}
+
+// Favicons: square 256px canvas, transparent padding, wordmark centered.
+async function squareFavicon(source: sharp.Sharp): Promise<Buffer> {
+  const trimmed = await source.trim({ threshold: 12 }).png().toBuffer();
+  const { width = 0, height = 0 } = await sharp(trimmed).metadata();
+  const scale = (256 - 24) / Math.max(width, height);
+  const w = Math.round(width * scale);
+  const h = Math.round(height * scale);
+  return sharp(trimmed)
+    .resize(w, h, { fit: 'fill' })
+    .extend({
+      top: Math.round((256 - h) / 2),
+      bottom: 256 - h - Math.round((256 - h) / 2),
+      left: Math.round((256 - w) / 2),
+      right: 256 - w - Math.round((256 - w) / 2),
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .png()
+    .toBuffer();
 }
 
 // ICO container: ICONDIR + one ICONDIRENTRY + the PNG payload (allowed for 256px).
@@ -51,10 +87,25 @@ function buildIco(png: Buffer): Buffer {
   return Buffer.concat([header, png]);
 }
 
-const favicon = buildIco(render(256));
-writeFileSync(join(repoRoot, 'app', 'favicon.ico'), favicon);
+const darkKeyed = keyDarkBackground(await loadRgba(darkSource));
 
-const logo = render(500);
-writeFileSync(join(repoRoot, 'public', 'images', 'logo.png'), logo);
+const lightLogo = await wordmark(sharp(lightSource)).toBuffer();
+writeFileSync(join(repoRoot, 'public', 'images', 'lxa-logo.png'), lightLogo);
 
-console.log(`wrote app/favicon.ico (${favicon.length} bytes) and public/images/logo.png (${logo.length} bytes)`);
+const darkLogo = await wordmark(darkKeyed.clone()).toBuffer();
+writeFileSync(join(repoRoot, 'public', 'images', 'lxa-logo-dark.png'), darkLogo);
+
+const faviconLight = await squareFavicon(sharp(lightSource));
+writeFileSync(join(repoRoot, 'public', 'images', 'favicon-light.png'), faviconLight);
+
+const faviconDark = await squareFavicon(darkKeyed);
+writeFileSync(join(repoRoot, 'public', 'images', 'favicon-dark.png'), faviconDark);
+
+const ico = buildIco(await sharp(faviconDark).toBuffer());
+writeFileSync(join(repoRoot, 'app', 'favicon.ico'), ico);
+
+console.log(
+  `wrote lxa-logo.png (${lightLogo.length} B), lxa-logo-dark.png (${darkLogo.length} B),`,
+  `favicon-light.png (${faviconLight.length} B), favicon-dark.png (${faviconDark.length} B),`,
+  `favicon.ico (${ico.length} B)`,
+);

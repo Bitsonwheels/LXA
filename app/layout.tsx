@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist_Mono, Inter, Poppins } from 'next/font/google';
 import './globals.css';
 import ThemeProvider from '@/app/_context/theme';
+import ThemeFavicon from './_components/theme-favicon';
 import { AuthenticationProvider } from '@/app/_context/authentication';
 import Router from './router';
 import { EventEmitterProvider } from '@/app/_context/events';
@@ -44,6 +45,7 @@ export default function RootLayout({
       <body className="h-svh overflow-hidden antialiased">
         <IsClientProvider>
           <ThemeProvider>
+            <ThemeFavicon />
             <EventEmitterProvider>
               <IncusProvider>
                 <AuthenticationProvider>

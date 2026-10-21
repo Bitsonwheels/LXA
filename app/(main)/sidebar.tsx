@@ -212,10 +212,19 @@ export default function Sidebar({
       {...props}
     >
       <SidebarHeader>
-        <div className="flex w-full mt-4 group-data-[collapsible=icon]:mt-0">
-          <p className="font-semibold font-[Poppins] translate-y-0.5 text-[30px] leading-0 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:translate-y-0 group-data-[collapsible=icon]:text-[14px] group-data-[collapsible=icon]:leading-none group-data-[collapsible=icon]:tracking-tight">
-            LXA
-          </p>
+        <div className="flex w-full justify-start pb-4 mt-4 group-data-[collapsible=icon]:mt-0 group-data-[collapsible=icon]:pb-2 group-data-[collapsible=icon]:justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/ui/images/lxa-logo.png"
+            alt="LXA"
+            className="h-8 w-auto dark:hidden group-data-[collapsible=icon]:h-3.5"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/ui/images/lxa-logo-dark.png"
+            alt="LXA"
+            className="h-8 w-auto hidden dark:block group-data-[collapsible=icon]:h-3.5"
+          />
         </div>
       </SidebarHeader>
       <SidebarContent>
