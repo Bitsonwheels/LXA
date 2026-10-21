@@ -12,7 +12,7 @@
 
 import { describe, expect, test } from 'bun:test';
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { closeSync, existsSync, openSync, readFileSync, readSync } from 'node:fs';
 import { join } from 'node:path';
 
 const repoRoot = join(import.meta.dir, '..');
@@ -39,28 +39,46 @@ function trackedFiles(): string[] {
   return raw.split('\0').filter(Boolean);
 }
 
+// Liest nur die ersten 8 KB, um binaere Dateien zu erkennen (Login-Fotos tragen den
+// Bergnamen in der IPTC-Caption). Textdateien werden danach vollstaendig geprueft.
+function readHead(path: string): Buffer {
+  const fd = openSync(path, 'r');
+  try {
+    const buffer = Buffer.alloc(8000);
+    const read = readSync(fd, buffer, 0, 8000, 0);
+    return buffer.subarray(0, read);
+  } finally {
+    closeSync(fd);
+  }
+}
+
+function isTextFile(path: string): boolean {
+  if (!existsSync(join(repoRoot, path))) return false;
+  return !readHead(path).includes(0);
+}
+
+function filesWithContent(needle: RegExp | string): string[] {
+  const hits: string[] = [];
+  for (const path of trackedFiles()) {
+    if (!isTextFile(path)) continue;
+    const content = readFileSync(join(repoRoot, path), 'utf8');
+    const found = typeof needle === 'string' ? content.includes(needle) : needle.test(content);
+    if (found) hits.push(path);
+  }
+  return hits;
+}
+
 describe('rename guard', () => {
   test('kein alter Produktname in versionierten Dateien ausserhalb des Ausnahmescopes', () => {
-    const offenders: string[] = [];
-    for (const path of trackedFiles()) {
-      if (isAllowed(path)) continue;
-      const bytes = readFileSync(join(repoRoot, path));
-      // binaere Dateien ueberspringen (Login-Fotos tragen den Bergnamen in der IPTC-Caption)
-      if (bytes.subarray(0, 8000).includes(0)) continue;
-      if (/ararat/i.test(bytes.toString('utf8'))) offenders.push(path);
-    }
+    const offenders = filesWithContent(/ararat/i).filter((path) => !isAllowed(path));
     expect(offenders).toEqual([]);
   });
 
   test('die zurueckgezogene Produktmarke kommt nirgends mehr vor', () => {
     const retired = ['Hye', 'Ararat'].join(' ');
-    const offenders: string[] = [];
-    for (const path of trackedFiles()) {
-      if (path === 'scripts/rename-guard.test.ts') continue; // der Guard selbst
-      const bytes = readFileSync(join(repoRoot, path));
-      if (bytes.subarray(0, 8000).includes(0)) continue;
-      if (bytes.toString('utf8').includes(retired)) offenders.push(path);
-    }
+    const offenders = filesWithContent(retired).filter(
+      (path) => path !== 'scripts/rename-guard.test.ts', // der Guard selbst
+    );
     expect(offenders).toEqual([]);
   });
 
