@@ -626,7 +626,8 @@ function LogEntriesEmptyState({ filename }: { filename: string }) {
         </EmptyMedia>
         <EmptyTitle>No log entries</EmptyTitle>
         <EmptyDescription>
-          {filename} is available, but it does not contain any entries yet.
+          {filename} is available, but it does not contain any entries yet. Incus may write
+          container logs only on demand — live output is available in the Console tab.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
