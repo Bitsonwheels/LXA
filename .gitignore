@@ -60,3 +60,6 @@ pnpm-workspace.yaml
 
 # claude
 .claude/settings.local.json
+
+# planning-with-files session artifacts
+.planning/

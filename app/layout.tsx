@@ -26,7 +26,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'Hye Ararat',
+  title: 'LXA',
   description: 'Take your infrastructure to its peak',
 };
 

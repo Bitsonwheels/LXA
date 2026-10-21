@@ -622,19 +622,19 @@
     var(--duration-move) ease-in both view-transition-slide-y;
 }
 
-::view-transition-group(ararat-sidebar),
-::view-transition-group(ararat-site-header) {
+::view-transition-group(lxa-sidebar),
+::view-transition-group(lxa-site-header) {
   animation: none;
   z-index: 100;
 }
 
-::view-transition-old(ararat-sidebar),
-::view-transition-old(ararat-site-header) {
+::view-transition-old(lxa-sidebar),
+::view-transition-old(lxa-site-header) {
   display: none;
 }
 
-::view-transition-new(ararat-sidebar),
-::view-transition-new(ararat-site-header) {
+::view-transition-new(lxa-sidebar),
+::view-transition-new(lxa-site-header) {
   animation: none;
 }
 

@@ -16,7 +16,7 @@ import { IncusProjectScopeSync } from '@/app/_incus/provider';
 import type { ResourceStatus } from '@/app/_incus/types';
 
 export const ALL_PROJECTS_VALUE = 'all';
-const STORAGE_KEY = 'ararat-selected-project';
+const STORAGE_KEY = 'lxa-selected-project';
 
 interface ProjectsContextValue {
   projects: Project[];

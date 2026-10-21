@@ -85,7 +85,7 @@ export default function CreateCertificate() {
       const { pemCert } = data;
       // i want .crt
       if (pemCert) {
-        download(`ararat.crt`, pemCert);
+        download(`lxa.crt`, pemCert);
       }
       // If worker returned a base64 PFX, download it. Worker generates PFX using the password provided.
       if (data.pfxBase64) {
@@ -101,7 +101,7 @@ export default function CreateCertificate() {
           const pfxUrl = URL.createObjectURL(pfxBlob);
           const a = document.createElement('a');
           a.href = pfxUrl;
-          a.download = `ararat.pfx`;
+          a.download = `lxa.pfx`;
           document.body.appendChild(a);
           a.click();
           a.remove();
@@ -205,7 +205,7 @@ export default function CreateCertificate() {
           <AccordionContent>
             <p>Add the .crt to Incus&apos;s trust store:</p>
             <pre className="overflow-x-auto rounded-md bg-gray-800 p-2 text-white">
-              <code>incus config trust add-certificate Downloads/ararat.crt</code>
+              <code>incus config trust add-certificate Downloads/lxa.crt</code>
             </pre>
           </AccordionContent>
         </AccordionItem>
@@ -234,10 +234,10 @@ export default function CreateCertificate() {
                       </p>
                       <p>
                         3. Click &quot;Import...&quot; then &quot;Next&quot; and select the
-                        &quot;ararat.pfx&quot; file previously downloaded.
+                        &quot;lxa.pfx&quot; file previously downloaded.
                       </p>
                       <p>
-                        4. Restart Chrome and navigate to Hye Ararat. Select the Ararat certificate.
+                        4. Restart Chrome and navigate to LXA. Select the LXA certificate.
                       </p>
                     </AccordionContent>
                   </AccordionItem>
@@ -249,12 +249,12 @@ export default function CreateCertificate() {
                         <code>chrome://settings/security</code>
                       </pre>
                       <p>
-                        2. Click &quot;Import&quot; and select the &quot;ararat.pfx&quot; file
+                        2. Click &quot;Import&quot; and select the &quot;lxa.pfx&quot; file
                         previously downloaded. Enter your password, or leave blank if one has not
                         been set.
                       </p>
                       <p>
-                        3. Restart Chrome and navigate to Hye Ararat. Select the Ararat certificate.
+                        3. Restart Chrome and navigate to LXA. Select the LXA certificate.
                       </p>
                     </AccordionContent>
                   </AccordionItem>
@@ -271,10 +271,10 @@ export default function CreateCertificate() {
                 </p>
                 <p>
                   3. Under the &quot;Your Certificates&quot; tab, click &quot;Import...&quot; and
-                  select the previously downloaded &quot;ararat.pfx&quot; file. Enter your password
+                  select the previously downloaded &quot;lxa.pfx&quot; file. Enter your password
                   when prompted, or leave blank if one has not been set.
                 </p>
-                <p>4. Restart Firefox and navigate to Hye Ararat. Select the Ararat certificate.</p>
+                <p>4. Restart Firefox and navigate to LXA. Select the LXA certificate.</p>
               </TabsContent>
               <TabsContent value="edge">
                 <p>1. Go to the following address:</p>
@@ -288,27 +288,27 @@ export default function CreateCertificate() {
                 <p>
                   3. Click &quot;Import...&quot; then &quot;Next&quot;, then &quot;Browse&quot;,
                   then change the file type to &quot;Personal Information Exchange (*.pfx;
-                  *.p12)&quot; and select the &quot;ararat.pfx&quot;, then click &quot;Next&quot;.
+                  *.p12)&quot; and select the &quot;lxa.pfx&quot;, then click &quot;Next&quot;.
                 </p>
                 <p>
                   4. Click &quot;Next&quot;, then enter the password you previously set, then click
                   &quot;Next&quot;
                 </p>
                 <p>
-                  5. Click &quot;Finish&quot;, &quot;Close&quot;, navigate back to Hye Ararat, click
+                  5. Click &quot;Finish&quot;, &quot;Close&quot;, navigate back to LXA, click
                   the lock or &quot;Not Secure&quot; icon in the address bar, then &quot;Your
                   certificate choices&quot;, then &quot;Change certificate&quot;, then click
-                  &quot;Change&quot;, and select the Hye Ararat certificate you just imported.
+                  &quot;Change&quot;, and select the LXA certificate you just imported.
                 </p>
               </TabsContent>
               <TabsContent value="macOS">
                 <p>1. Open &quot;Keychain Access&quot; from Applications &gt; Utilities.</p>
                 <p>
                   2. Select the &quot;login&quot; keychain, and drag and drop the downloaded
-                  &quot;ararat.pfx&quot; file.
+                  &quot;lxa.pfx&quot; file.
                 </p>
                 <p>
-                  3. Restart your browser and navigate to Hye Ararat. Select the Ararat certificate.
+                  3. Restart your browser and navigate to LXA. Select the LXA certificate.
                 </p>
               </TabsContent>
             </Tabs>

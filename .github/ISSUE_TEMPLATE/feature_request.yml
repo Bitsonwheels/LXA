@@ -1,5 +1,5 @@
 name: Feature request
-description: Propose a request, idea, or new functionality for Ararat.
+description: Propose a request, idea, or new functionality for LXA.
 type: Feature
 body:
   - type: input
@@ -7,7 +7,7 @@ body:
     attributes:
       label: Goal
       description: Summarize the request, idea, or new functionality you're proposing in one or two sentences.
-      placeholder: Allow executing commands on an instance directly in Ararat.
+      placeholder: Allow executing commands on an instance directly in LXA.
     validations:
       required: true
 

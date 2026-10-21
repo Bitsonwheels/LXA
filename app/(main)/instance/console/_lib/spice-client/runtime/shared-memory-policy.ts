@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026 Hye Hosting LLC & Hye Ararat contributors.
+ * Copyright (C) 2026 Hye Hosting LLC & LXA contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -8,9 +8,9 @@
 
 export const SHARED_MEMORY_FAST_PATH_QUERY = 'spice_sharedMemoryBuffers';
 export const SHARED_MEMORY_FAST_PATH_ALIAS_QUERY = 'sharedMemoryBuffers';
-export const SHARED_MEMORY_FAST_PATH_COOKIE = 'ararat_spice_shared_memory';
+export const SHARED_MEMORY_FAST_PATH_COOKIE = 'lxa_spice_shared_memory';
 export const SHARED_MEMORY_FAST_PATH_STORAGE_KEY =
-  'ararat:spice-shared-memory';
+  'lxa:spice-shared-memory';
 export const INCUS_SPICE_WEB_TRANSPORT_HEADER = 'X-Incus-SPICE-Web-Transport';
 export const INCUS_SPICE_WEB_TRANSPORT_SHARED_MEMORY =
   'shared-memory-buffers-v1';

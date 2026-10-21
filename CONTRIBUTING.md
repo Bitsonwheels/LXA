@@ -1,6 +1,6 @@
-# Contributing to Hye Ararat
+# Contributing to LXA
 
-Thank you for your interest in contributing to Hye Ararat!
+Thank you for your interest in contributing to LXA!
 
 ## Reporting Issues
 If you find a bug or have a feature request, please open an issue using the provided GitHub issue templates. Make sure to search existing issues before creating a new one.

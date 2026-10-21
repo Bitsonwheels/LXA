@@ -23,7 +23,7 @@ self.addEventListener('message', (ev: MessageEvent) => {
     const attrs = [
       {
         name: 'organizationName',
-        value: `Hye Ararat ${typeof location !== 'undefined' ? location.hostname : ''}`,
+        value: `LXA ${typeof location !== 'undefined' ? location.hostname : ''}`,
       },
     ];
     cert.setSubject(attrs);

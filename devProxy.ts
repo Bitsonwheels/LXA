@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026 Hye Hosting LLC & Hye Ararat contributors.
+ * Copyright (C) 2026 Hye Hosting LLC & LXA contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -8,7 +8,7 @@
 
 /// <reference types="bun-types" />
 /**
- * @file Development server that somewhat simulates how Ararat is served in production by the Incus web server (does not simulate SPA serving behavior)
+ * @file Development server that somewhat simulates how LXA is served in production by the Incus web server (does not simulate SPA serving behavior)
  * @author Joseph Maldjian <joseph.maldjian@hyecompany.com>
  */
 import { existsSync, readFileSync } from 'node:fs';
@@ -29,7 +29,7 @@ const TLS_CERT_PATH = './server.crt';
 const TLS_KEY_PATH = './server.key';
 const API_TARGET = process.env.DEV_PROXY_API_TARGET ?? 'https://localhost:8443';
 const UPSTREAM_CLIENT_PFX_ENABLED = process.env.DEV_PROXY_UPSTREAM_CLIENT_PFX === '1';
-const UPSTREAM_CLIENT_PFX_PATH = process.env.DEV_PROXY_UPSTREAM_CLIENT_PFX_PATH ?? './ararat.pfx';
+const UPSTREAM_CLIENT_PFX_PATH = process.env.DEV_PROXY_UPSTREAM_CLIENT_PFX_PATH ?? './lxa.pfx';
 const UPSTREAM_CLIENT_PFX_PASSPHRASE = process.env.DEV_PROXY_UPSTREAM_CLIENT_PFX_PASSPHRASE ?? '';
 const LISTENER_MODE = parseListenerMode(process.env.DEV_PROXY_LISTENER_MODE);
 
@@ -539,7 +539,7 @@ if (useHttpsListener) {
 const server = Bun.serve<ProxySocketData>(serverOptions);
 
 console.log(
-  `Hye Ararat listening on ${getListenerScheme()}://localhost:${server.port} (listener mode: ${LISTENER_MODE}${UPSTREAM_CLIENT_PFX_ENABLED ? ', upstream TLS client auth enabled' : ''})`,
+  `LXA listening on ${getListenerScheme()}://localhost:${server.port} (listener mode: ${LISTENER_MODE}${UPSTREAM_CLIENT_PFX_ENABLED ? ', upstream TLS client auth enabled' : ''})`,
 );
 if (CROSS_ORIGIN_ISOLATION_ENABLED) {
   console.log(

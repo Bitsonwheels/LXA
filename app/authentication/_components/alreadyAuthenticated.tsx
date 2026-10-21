@@ -15,7 +15,7 @@ export default function AlreadyAuthenticated() {
       <AlertCircleIcon />
       <AlertTitle>You are already authenticated.</AlertTitle>
       <AlertDescription>
-        You are already logged into Hye Ararat and do not need to authenticate
+        You are already logged into LXA and do not need to authenticate
         again.
         <Link href="/" transitionTypes={['nav-back']}>
           <Button size="sm">Go to Dashboard</Button>

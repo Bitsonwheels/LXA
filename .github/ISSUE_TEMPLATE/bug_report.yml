@@ -1,5 +1,5 @@
 name: Bug report
-description: Report broken or unexpected behavior in Ararat.
+description: Report broken or unexpected behavior in LXA.
 type: Bug
 body:
   - type: input
@@ -72,11 +72,11 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: Share only the environment details needed to reproduce this bug, such as browser, OS, Ararat version or commit, Incus/server setup, or deployment mode.
+      description: Share only the environment details needed to reproduce this bug, such as browser, OS, LXA version or commit, Incus/server setup, or deployment mode.
       placeholder: |
         Browser: Chrome 123
         OS: Windows 11
-        Ararat version or commit: ...
+        LXA version or commit: ...
         Incus/server setup: ...
     validations:
       required: false

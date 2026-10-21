@@ -9,8 +9,8 @@ import LoginMethods from './loginMethods';
 import AlreadyAuthenticated from '../_components/alreadyAuthenticated';
 
 export const metadata = {
-  title: 'Login | Hye Ararat',
-  description: 'Login to Hye Ararat',
+  title: 'Login | LXA',
+  description: 'Login to LXA',
 };
 
 export default function Authentication() {

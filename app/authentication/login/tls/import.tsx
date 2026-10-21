@@ -41,7 +41,7 @@ export default function ImportCertificate() {
       </Alert>
       <p>Generate a trust token to authenticate your client:</p>
       <pre className="bg-gray-800 text-white p-2 rounded-md overflow-x-auto">
-        <code>incus config trust add ararat</code>
+        <code>incus config trust add lxa</code>
       </pre>
       <p className="mt-2">Then, paste the trust token here:</p>
       <Input

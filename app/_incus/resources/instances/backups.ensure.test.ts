@@ -14,7 +14,7 @@ const TRANSPORT_PATH = `${import.meta.dir}/../../transport`;
 
 // waitForOperation builds its URL against window.location; provide a minimal
 // stub because bun test has no DOM.
-(globalThis as { window?: unknown }).window = { location: { origin: 'https://ararat.test' } };
+(globalThis as { window?: unknown }).window = { location: { origin: 'https://lxa.test' } };
 
 type BackupToJson = (path: string, options?: unknown) => Promise<{ metadata: InstanceBackup[] }>;
 

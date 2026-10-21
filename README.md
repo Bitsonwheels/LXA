@@ -1,16 +1,16 @@
-# Hye Ararat
+# LXA
 
 **A modern, web-based UI for managing [Incus](https://linuxcontainers.org/incus/).**
 
-Hye Ararat provides a clean, intuitive dashboard for managing your Incus deployment. Whether you are running an old iMac in your closet or building a hyperscaler, Ararat gives you the unified comprehensive control plane you need to take your infrastructure to its peak.
+LXA provides a clean, intuitive dashboard for managing your Incus deployment. Whether you are running an old iMac in your closet or building a hyperscaler, LXA gives you the unified comprehensive control plane you need to take your infrastructure to its peak.
 
 **Current Release:** v3.0.0-beta.4
 
-**Community Forum:** [Ararat Incus Discourse](https://discuss.linuxcontainers.org/tag/ararat)
+**Community Forum:** [Incus Discourse](https://discuss.linuxcontainers.org/tag/ararat)
 
 ## Roadmap
 
-Hye Ararat is currently in public beta. Below is a high-level summary of our progress on supporting the foundational Incus primitives:
+LXA is currently in public beta. Below is a high-level summary of our progress on supporting the foundational Incus primitives:
 
 - [x] Instances
 - [x] Operations
@@ -24,7 +24,7 @@ Hye Ararat is currently in public beta. Below is a high-level summary of our pro
 
 We are actively working on completing the UI implementation for all Incus primitives to provide a comprehensive management experience.
 
-A rewrite is currently underway, so we are not shipping on our regular release cadence. See the [Hye Ararat Rewrite thread](https://discuss.linuxcontainers.org/t/hye-ararat-rewrite/26912) on the Linux Containers discourse for more details and up-to-date information.
+A rewrite is currently underway, so we are not shipping on our regular release cadence. See the [rewrite thread](https://discuss.linuxcontainers.org/t/hye-ararat-rewrite/26912) on the Linux Containers discourse for more details and up-to-date information.
 
 ## Some Instance Screenshots
 
@@ -57,27 +57,27 @@ This guide is designed for the latest LTS release of Debian/Ubuntu.
 
 ### Prebuilt Archive
 
-Use this path if you want to install a ready-made Ararat UI build.
+Use this path if you want to install a ready-made LXA UI build.
 
 #### Prerequisites
 
 - A working Incus installation accessible over the network
-- A copy of `ararat.tar.gz` from either the latest official release or the bleeding-edge `yerek` build artifact
+- A copy of `lxa.tar.gz` from either the latest official release or the bleeding-edge `yerek` build artifact
 
 #### Installation Instructions
 
-1. Download an Ararat UI archive:
-   - **Latest official release:** download `ararat.tar.gz` from the [latest GitHub Release](https://github.com/hyecompany/ararat-web/releases/latest). This is the recommended path for most users.
-   - **Bleeding edge:** download the `ararat.tar.gz` artifact from a successful `yerek` branch run of the [Build UI workflow](https://github.com/hyecompany/ararat-web/actions/workflows/ui-build.yml). GitHub Actions downloads artifacts as zip files, so unzip the download first to get `ararat.tar.gz`.
+1. Download an LXA UI archive:
+   - **Latest official release:** download `lxa.tar.gz` from the [latest GitHub Release](https://github.com/hyecompany/ararat-web/releases/latest). This is the recommended path for most users.
+   - **Bleeding edge:** download the `lxa.tar.gz` artifact from a successful `yerek` branch run of the [Build UI workflow](https://github.com/hyecompany/ararat-web/actions/workflows/ui-build.yml). GitHub Actions downloads artifacts as zip files, so unzip the download first to get `lxa.tar.gz`.
 
 2. Extract the archive into Incus's UI directory. Zabbly package users can use `/opt/incus/ui`:
 
    ```bash
    sudo mkdir -p /opt/incus/ui
-   sudo tar -xzf ararat.tar.gz -C /opt/incus/ui
+   sudo tar -xzf lxa.tar.gz -C /opt/incus/ui
    ```
 
-   Users of other packages can extract Ararat anywhere they prefer, then set `INCUS_UI` in the `incusd` environment to that path.
+   Users of other packages can extract LXA anywhere they prefer, then set `INCUS_UI` in the `incusd` environment to that path.
 
 3. Restart Incus:
 
@@ -87,11 +87,11 @@ Use this path if you want to install a ready-made Ararat UI build.
 
 ### Accessing the UI
 
-Simply visit `https://{host}:{port}` (default `8443`) that you set Incus to listen on in your browser, and Hye Ararat will be served! If it is not, restart Incus with `systemctl restart incus` and try visiting again.
+Simply visit `https://{host}:{port}` (default `8443`) that you set Incus to listen on in your browser, and LXA will be served! If it is not, restart Incus with `systemctl restart incus` and try visiting again.
 
 ### Building From Source
 
-Use this Debian/Ubuntu path if you are developing Ararat or want to build the UI and SPICE console runtime locally.
+Use this Debian/Ubuntu path if you are developing LXA or want to build the UI and SPICE console runtime locally.
 
 #### Prerequisites
 
@@ -128,13 +128,13 @@ Reload your shell so the new `bun` and `cargo` commands are available, then inst
 cargo install wasm-pack
 ```
 
-Install Ararat's project dependencies:
+Install LXA's project dependencies:
 
 ```bash
 bun install
 ```
 
-Build the SPICE console runtime, build the web UI, and copy Ararat to Incus's UI directory:
+Build the SPICE console runtime, build the web UI, and copy LXA to Incus's UI directory:
 
 ```bash
 bun run build-install
@@ -142,7 +142,7 @@ bun run build-install
 
 ## License
 
-Copyright (C) 2026 Hye Hosting LLC & Hye Ararat contributors.
+Copyright (C) 2026 Hye Hosting LLC & LXA contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

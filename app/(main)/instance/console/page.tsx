@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026 Hye Hosting LLC & Hye Ararat contributors.
+ * Copyright (C) 2026 Hye Hosting LLC & LXA contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -56,7 +56,7 @@ const GraphicalConsoleView = dynamic(() => import('./_components/graphical-conso
 
 const WEBUSB_REDIRECTION_QUERY = 'spice_webusb';
 const WEBUSB_REDIRECTION_ALIAS_QUERY = 'webusb';
-const WEBUSB_REDIRECTION_STORAGE_KEY = 'ararat:spice-webusb-redirection';
+const WEBUSB_REDIRECTION_STORAGE_KEY = 'lxa:spice-webusb-redirection';
 const CONSOLE_MODE_QUERY = 'console_mode';
 const CONSOLE_MODE_ALIAS_QUERY = 'console';
 const DIAGNOSTICS_OVERLAY_QUERY = 'spice_diagnostics';
@@ -528,7 +528,7 @@ function writeSharedMemoryFastPathCookie(enabled: boolean) {
 }
 
 function getConsoleModePreferenceKey(instanceName: string | null) {
-  return instanceName ? `ararat:console-mode:${instanceName}` : null;
+  return instanceName ? `lxa:console-mode:${instanceName}` : null;
 }
 
 function readRememberedConsoleMode(instanceName: string | null) {

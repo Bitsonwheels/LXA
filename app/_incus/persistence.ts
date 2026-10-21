@@ -18,7 +18,7 @@ import type {
   StorageVolumeItem,
 } from './types';
 
-const PERSISTENCE_KEY = 'ararat:incus-store:v1';
+const PERSISTENCE_KEY = 'lxa:incus-store:v1';
 const PERSIST_DEBOUNCE_MS = 250;
 
 type PersistedIncusState = {
@@ -458,7 +458,7 @@ export function scheduleIncusStatePersistence(state: IncusStoreState) {
       // Must not die silently: a full localStorage makes every later cache
       // write fail; surface it at least once in the browser console.
       debugIncusData('persistence:save-error', error);
-      console.warn('Ararat: could not persist Incus cache to localStorage.', error);
+      console.warn('LXA: could not persist Incus cache to localStorage.', error);
     }
   }, PERSIST_DEBOUNCE_MS);
 }

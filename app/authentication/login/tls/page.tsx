@@ -7,8 +7,8 @@ import {
 } from '@/components/ui/card';
 import TlsOptions from './tlsOptions';
 export const metadata = {
-  title: 'TLS Login | Hye Ararat',
-  description: 'Login to Hye Ararat via TLS',
+  title: 'TLS Login | LXA',
+  description: 'Login to LXA via TLS',
 };
 export default function TLSAuth() {
   return (

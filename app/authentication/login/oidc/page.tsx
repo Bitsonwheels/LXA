@@ -8,8 +8,8 @@ import {
 import OidcLogin from "./oidcLogin";
 
 export const metadata = {
-  title: "OpenID Connect Login | Hye Ararat",
-  description: "Login to Hye Ararat via OpenID Connect",
+  title: "OpenID Connect Login | LXA",
+  description: "Login to LXA via OpenID Connect",
 };
 
 export default function OidcAuth() {

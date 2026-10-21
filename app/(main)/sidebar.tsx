@@ -205,7 +205,7 @@ export default function Sidebar({
       collapsible="icon"
       style={
         {
-          viewTransitionName: 'ararat-sidebar',
+          viewTransitionName: 'lxa-sidebar',
           ...style,
         } as React.CSSProperties
       }
@@ -213,16 +213,9 @@ export default function Sidebar({
     >
       <SidebarHeader>
         <div className="flex w-full mt-4 group-data-[collapsible=icon]:mt-0">
-          <img
-            src="/ui/images/hyeLogo.png"
-            alt="Ararat"
-            className="h-full my-auto ml-auto max-h-8 group-data-[collapsible=icon]:max-h-5 group-data-[collapsible=icon]:mr-auto transition-all"
-          />
-          <div className="text-justify my-auto mr-auto ml-2">
-            <p className="font-semibold font-[Poppins] inline-block translate-y-0.5 text-[30px] leading-0 group-data-[collapsible=icon]:hidden">
-              Ararat
-            </p>
-          </div>
+          <p className="font-semibold font-[Poppins] translate-y-0.5 text-[30px] leading-0 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:translate-y-0 group-data-[collapsible=icon]:text-[14px] group-data-[collapsible=icon]:tracking-tight">
+            LXA
+          </p>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -238,7 +231,7 @@ export default function Sidebar({
             v{packageJson.version}
           </span>
           <Link
-            href="https://github.com/Bitsonwheels/ararat-web"
+            href="https://github.com/Bitsonwheels/LXA"
             target="_blank"
             rel="noreferrer"
             aria-label="GitHub repository"

@@ -1,7 +1,7 @@
 import type { BeforeMount, Theme } from '@monaco-editor/react';
 
-export const DASHBOARD_MONACO_DARK_THEME = 'ararat-dashboard-dark';
-export const DASHBOARD_MONACO_LIGHT_THEME = 'ararat-dashboard-light';
+export const DASHBOARD_MONACO_DARK_THEME = 'lxa-dashboard-dark';
+export const DASHBOARD_MONACO_LIGHT_THEME = 'lxa-dashboard-light';
 
 export function dashboardMonacoTheme(
   resolvedTheme: string | undefined,

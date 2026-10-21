@@ -29,7 +29,7 @@ async function main() {
     throw new Error(`Unable to fetch ${specUrl}: ${response.status}`);
   }
 
-  const workDir = join(tmpdir(), 'ararat-incus-types');
+  const workDir = join(tmpdir(), 'lxa-incus-types');
   await mkdir(workDir, { recursive: true });
 
   const swaggerPath = join(workDir, 'rest-api.yaml');

@@ -1,5 +1,5 @@
 /**
- * Ararat is served by the Incus web server. The Incus web server, regardless of the URL path, always serves index.html.
+ * LXA is served by the Incus web server. The Incus web server, regardless of the URL path, always serves index.html.
  * Next.js conflicts with Incus's approach, as it generates an HTML file for each route rather than serving an SPA from a single index.html.
  * This component uses the Next.js client-side router to re-push the current path on the first render, ensuring that the correct route is loaded.
  * When Next.js serves a route that doesn't exist, it reloads the page. If not implemented carefully, this can lead to an infinite reload loop.
