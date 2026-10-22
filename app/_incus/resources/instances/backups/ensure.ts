@@ -40,6 +40,13 @@ export async function ensureInstanceBackups(
     { status: 'missing' as const };
   if (!shouldFetchStoredStatus(collection.status)) return;
 
+  // The fence flag is applied after the request task settled: the request
+  // registry holds the slot until then, and a store write inside the task
+  // would make the owning hook's refetch deduplicate into the request that was
+  // just fenced. The collection would stay on the old data until a full page
+  // reload.
+  let fenced = false;
+
   await requests.run(`instance:backups:${key}`, [collectionKey], async () => {
     // Fencing: if the collection was invalidated while this fetch was in
     // flight, the response predates the invalidation. Publish it only as
@@ -57,11 +64,7 @@ export async function ensureInstanceBackups(
       );
 
       if (store.getKeyVersion(collectionKey) !== startVersion) {
-        store.update((state) => {
-          const instance = state.instances.items[key];
-          if (!instance) return;
-          instance.backups.collection = { status: 'stale' };
-        }, [collectionKey]);
+        fenced = true;
         return;
       }
 
@@ -94,6 +97,17 @@ export async function ensureInstanceBackups(
       }, [collectionKey]);
     }
   });
+
+  if (fenced) {
+    // Flag the collection stale so the owning hook refetches. Bumping the
+    // version here (after the request slot was released) is what makes that
+    // refetch a real request instead of a deduplicated no-op.
+    store.update((state) => {
+      const instance = state.instances.items[key];
+      if (!instance) return;
+      instance.backups.collection = { status: 'stale' };
+    }, [collectionKey]);
+  }
 }
 
 export function markInstanceBackupsStale(

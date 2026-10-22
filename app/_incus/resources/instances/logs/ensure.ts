@@ -63,6 +63,13 @@ export async function ensureInstanceLogs(
   };
   if (!shouldFetchStoredStatus(collection.status)) return;
 
+  // The fence flag is applied after the request task settled: the request
+  // registry holds the slot until then, and a store write inside the task
+  // would make the owning hook's refetch deduplicate into the request that was
+  // just fenced. The collection would stay on the old data until a full page
+  // reload.
+  let fenced = false;
+
   await requests.run(`instance:logs:${key}`, [collectionKey], async () => {
     // Fencing: see backups/ensure.ts — a fetch invalidated mid-flight must not
     // publish pre-invalidation data as fresh.
@@ -70,13 +77,13 @@ export async function ensureInstanceLogs(
     try {
       const logs = await requestLogList(request.instanceName, project);
       const logSet = new Set(logs);
+      if (store.getKeyVersion(collectionKey) !== startVersion) {
+        fenced = true;
+        return;
+      }
       store.update(
         (state) => {
           const instance = state.instances.items[key] ?? store.ensureInstance(key);
-          if (store.getKeyVersion(collectionKey) !== startVersion) {
-            instance.logs.collection = { status: 'stale' };
-            return;
-          }
           instance.logs.collection = { status: 'ready' };
           for (const existingLog of Object.keys(instance.logs.items)) {
             if (!logSet.has(existingLog)) {
@@ -109,6 +116,17 @@ export async function ensureInstanceLogs(
       );
     }
   });
+
+  if (fenced) {
+    // Flag the collection stale so the owning hook refetches. Bumping the
+    // version here (after the request slot was released) is what makes that
+    // refetch a real request instead of a deduplicated no-op.
+    store.update((state) => {
+      const instance = state.instances.items[key];
+      if (!instance) return;
+      instance.logs.collection = { status: 'stale' };
+    }, [collectionKey]);
+  }
 }
 
 export async function ensureInstanceLogContent(
