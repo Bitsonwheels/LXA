@@ -212,7 +212,7 @@ export default function Sidebar({
       {...props}
     >
       <SidebarHeader>
-        <div className="flex w-full justify-start pb-4 mt-4 group-data-[collapsible=icon]:mt-0 group-data-[collapsible=icon]:pb-2 group-data-[collapsible=icon]:justify-center">
+        <div className="flex w-full justify-center pb-4 mt-4 group-data-[collapsible=icon]:mt-0 group-data-[collapsible=icon]:pb-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/ui/images/lxa-logo.png"
