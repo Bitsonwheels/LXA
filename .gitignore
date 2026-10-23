@@ -63,3 +63,6 @@ pnpm-workspace.yaml
 
 # planning-with-files session artifacts
 .planning/
+
+# opencode/openchamber session artifacts
+.openchamber/

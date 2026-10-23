@@ -4,7 +4,7 @@
 
 LXA provides a clean, intuitive dashboard for managing your Incus deployment. Whether you are running an old iMac in your closet or building a hyperscaler, LXA gives you the unified comprehensive control plane you need to take your infrastructure to its peak.
 
-**Current Release:** v3.0.0-beta.6
+**Current Release:** v3.0.0-beta.7
 
 **Community Forum:** [Incus Discourse](https://discuss.linuxcontainers.org/tag/ararat)
 
@@ -143,6 +143,9 @@ bun run build-install
 ```
 
 ## Changelog
+
+### v3.0.0-beta.7
+- Instance CPU usage is correct now: CPU time is sampled on a fixed 5 second cadence (Incus pushes no events for state changes), percent deltas are measured between readings instead of store render times, and instances without `limits.cpu` normalize against the host core count. Closes #68.
 
 ### v3.0.0-beta.6
 - Guard the CPU percent calculation against negative `usageDelta` deltas (CPU time resets when an instance restarts). Issue #68 stays under observation.
