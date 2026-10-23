@@ -95,4 +95,7 @@ export interface CreateInstanceBody {
     mode?: 'pull';
     protocol?: 'simplestreams' | 'oci';
   };
+  /** Wired to cloud-init user-data; never sent as a plain field. */
+  rootPassword?: string;
+  rootPasswordConfirm?: string;
 }

@@ -61,6 +61,14 @@ export default function InstancePage() {
         // percent is total usage across all cores (e.g. 200% for 2 cores)
         // we want to normalize to 0-100%
         const percent = ((usageDelta / timeDelta) * 100) / cpuCount;
+
+        // shortcut: CPU time resets on instance restart; skip negative deltas.
+        if (usageDelta < 0) {
+          lastCpuUsage.current = currentUsage;
+          lastTime.current = currentTime;
+          return;
+        }
+
         setCpuPercent(Math.max(0, percent));
       }
     }

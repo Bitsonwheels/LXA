@@ -148,15 +148,15 @@ export function processConfigurableOptions(config: ConfigurableOptions) {
       editor_kind: 'monaco',
       editor_language: 'json',
     },
-    'cloud-init.user.network-config': {
+    'cloud-init.network-config': {
       editor_kind: 'monaco',
       editor_language: 'yaml',
     },
-    'cloud-init.user.user-data': {
+    'cloud-init.user-data': {
       editor_kind: 'monaco',
       editor_language: 'yaml',
     },
-    'cloud-init.user.vendor-data': {
+    'cloud-init.vendor-data': {
       editor_kind: 'monaco',
       editor_language: 'yaml',
     },

@@ -4,7 +4,7 @@
 
 LXA provides a clean, intuitive dashboard for managing your Incus deployment. Whether you are running an old iMac in your closet or building a hyperscaler, LXA gives you the unified comprehensive control plane you need to take your infrastructure to its peak.
 
-**Current Release:** v3.0.0-beta.5
+**Current Release:** v3.0.0-beta.6
 
 **Community Forum:** [Incus Discourse](https://discuss.linuxcontainers.org/tag/ararat)
 
@@ -141,6 +141,14 @@ Build the SPICE console runtime, build the web UI, and copy LXA to Incus's UI di
 ```bash
 bun run build-install
 ```
+
+## Changelog
+
+### v3.0.0-beta.6
+- Guard the CPU percent calculation against negative `usageDelta` deltas (CPU time resets when an instance restarts). Issue #68 stays under observation.
+- Console: connection failures are shown in the terminal instead of a silent black screen (e.g. "Instance is not running" for stopped instances).
+- Instance list: a store placeholder for an instance that does not exist ("Instance not found") is removed again instead of staying as a dead row that always 404s on delete/console.
+- Fix the cloud-init config keys for the root password feature: `cloud-init.user-data`, `cloud-init.network-config`, `cloud-init.vendor-data` (create flow + Security dialog).
 
 ## License
 

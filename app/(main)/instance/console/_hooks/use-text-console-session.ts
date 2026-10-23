@@ -7,6 +7,7 @@ import { useTerminal } from '../useTerminal';
 import { getTextConsoleShortcutSequence } from '../_lib/text-shortcuts';
 import type { ConsoleSessionController, ConsoleShortcutId } from '../_lib/shortcuts';
 import {
+  getConsoleConnectionFailureMessage,
   getErrorMessage,
   isConsoleAlreadyInUseError,
 } from '../_lib/console-errors';
@@ -134,6 +135,13 @@ export function useTextConsoleSession({
         }
         if (isConsoleAlreadyInUseError(err)) {
           onConsoleInUse?.(getErrorMessage(err));
+        } else {
+          // Surface every other connection failure (e.g. stopped instance)
+          // in the terminal; a silent catch here renders the console black.
+          termRef.current?.write(
+            `\r\n[console] ${getConsoleConnectionFailureMessage(err)}\r\n` +
+              `[console] Start the instance and use reconnect if needed.\r\n`,
+          );
         }
         logError(err, 'attach console sockets');
       });

@@ -7,6 +7,7 @@ import {
   ArrowRightIcon,
   CopyPlusIcon,
   HardDriveIcon,
+  KeyRoundIcon,
   RefreshCcwDotIcon,
   Settings2Icon,
   SquaresIntersectIcon,
@@ -46,6 +47,7 @@ import Devices from './management/devices';
 import Profiles from './management/profiles';
 import Rebuild from './management/rebuild';
 import Repair from './management/repair';
+import Security from './management/security';
 import { useStoragePools } from '@/app/_incus/resources/storage-pools/hooks';
 import type { StoragePool } from '@/app/_incus/types';
 
@@ -54,6 +56,7 @@ type ActionView =
   | 'devices'
   | 'configuration'
   | 'profiles'
+  | 'security'
   | 'rebuild'
   | 'clone'
   | 'repair'
@@ -90,6 +93,13 @@ const menuActions: MenuAction[] = [
     title: 'Manage Profiles',
     description: 'Add or remove profiles applied to this instance.',
     icon: SquaresIntersectIcon,
+    section: 'settings',
+  },
+  {
+    view: 'security',
+    title: 'Security',
+    description: 'Change the root password of this instance.',
+    icon: KeyRoundIcon,
     section: 'settings',
   },
   {
@@ -187,6 +197,7 @@ export function InstanceActionsMenu({
     menu: 'max-h-[85vh] sm:max-w-3xl',
     clone: 'max-h-[85vh] sm:max-w-2xl',
     profiles: 'max-h-[85vh] sm:max-w-2xl',
+    security: 'max-h-[85vh] sm:max-w-2xl',
     delete: 'max-h-[85vh] sm:max-w-2xl',
     repair: 'max-h-[85vh] sm:max-w-2xl',
   };
@@ -252,7 +263,8 @@ export function InstanceActionsMenu({
               view === 'clone' ||
               view === 'delete' ||
               view === 'repair' ||
-              view === 'profiles'
+              view === 'profiles' ||
+              view === 'security'
               ? 'overflow-y-auto'
               : 'overflow-hidden',
           )}
@@ -269,6 +281,10 @@ export function InstanceActionsMenu({
 
           {view === 'profiles' ? (
             <Profiles instance={instance} onMutate={onMutate} onBack={() => setView('menu')} />
+          ) : null}
+
+          {view === 'security' ? (
+            <Security instance={instance} onMutate={onMutate} onBack={() => setView('menu')} />
           ) : null}
 
           {view === 'rebuild' ? (
@@ -410,6 +426,8 @@ function getDialogTitle(view: ActionView, instanceName: string) {
       return 'Edit Configuration';
     case 'profiles':
       return 'Manage Profiles';
+    case 'security':
+      return 'Security';
     case 'rebuild':
       return `Rebuild ${instanceName}`;
     case 'clone':
@@ -432,6 +450,8 @@ function getDialogDescription(view: ActionView, instanceName: string) {
       return `Edit configuration keys and YAML for ${instanceName}.`;
     case 'profiles':
       return `Choose which profiles are applied to ${instanceName}.`;
+    case 'security':
+      return `Set the root password for ${instanceName}.`;
     case 'rebuild':
       return 'Choose how to rebuild this instance.';
     case 'clone':

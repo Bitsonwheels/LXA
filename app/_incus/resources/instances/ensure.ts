@@ -71,6 +71,13 @@ function paramsForProject(project: string, extra?: Record<string, string | numbe
   return Object.fromEntries(params.entries());
 }
 
+// Incus errors carry the daemon message verbatim ("Instance not found");
+// status codes are lost by parseResponse, so the message is the signal.
+function isInstanceNotFoundError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /not found/i.test(message);
+}
+
 export function splitInstanceKey(key: string) {
   const [project = 'default', name = ''] = key.split('/').map(decodeURIComponent);
   return { project, name };
@@ -308,6 +315,14 @@ async function ensureSingleInstanceMetadata(
         });
       } catch (error) {
         store.update((state) => {
+          // A not-found instance must not linger as a placeholder: the store
+          // seeds items for explicitly requested keys, and a phantom entry
+          // would surface as a dead row (delete/console always 404) in the
+          // instance list.
+          if (isInstanceNotFoundError(error)) {
+            delete state.instances.items[key];
+            return;
+          }
           const item = state.instances.items[key] ?? store.ensureInstance(key);
           item.metadata = {
             ...item.metadata,
@@ -517,6 +532,12 @@ async function ensureInstanceCollectionPayloads(
           } catch (error) {
             store.update((state) => {
               for (const key of affectedTargetKeys) {
+                // Not-found instances must not get (or keep) a placeholder
+                // here either — the fix mirrors ensureSingleInstanceMetadata.
+                if (isInstanceNotFoundError(error)) {
+                  delete state.instances.items[key];
+                  return;
+                }
                 const item = state.instances.items[key] ?? store.ensureInstance(key);
                 if (shouldFetchStoredStatus(item.metadata.status)) {
                   item.metadata = {
@@ -584,6 +605,10 @@ async function ensureInstanceState(
         store.update((state) => {
           const item = state.instances.items[key];
           if (!item) return;
+          if (isInstanceNotFoundError(error)) {
+            delete state.instances.items[key];
+            return;
+          }
           item.state = {
             ...item.state,
             status: 'error',
@@ -687,7 +712,7 @@ export async function ensureInstances(
   if (visibleKeys.length) {
     store.update((state) => {
       for (const key of visibleKeys) {
-        state.instances.items[key] ?? store.ensureInstance(key);
+        if (!state.instances.items[key]) store.ensureInstance(key);
       }
     }, visibleKeys.map(resourceKeys.instanceMetadata));
     canonicalizeStoredInstancePayloads(store, visibleKeys);

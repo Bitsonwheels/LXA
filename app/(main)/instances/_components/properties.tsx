@@ -29,6 +29,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import type { CreateInstanceBody } from '@/app/(main)/instances/_lib/instances.d';
+import { PasswordInput } from '@/app/(main)/_components/root-password-field';
 
 interface InstancePropertiesProps {
   form: UseFormReturn<CreateInstanceBody>;
@@ -134,6 +135,45 @@ export default function InstanceProperties({
           </SelectContent>
         </Select>
       </Field>
+      <FormField
+        control={form.control}
+        name="rootPassword"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Root Password</FormLabel>
+            <FormControl>
+              <PasswordInput
+                id="root-password"
+                value={field.value || ''}
+                onChange={field.onChange}
+              />
+            </FormControl>
+            <p className="text-muted-foreground text-sm">
+              Applied to the root user on first boot via cloud-init. Change it later under
+              Manage &gt; Security.
+            </p>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="rootPasswordConfirm"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Confirm Root Password</FormLabel>
+            <FormControl>
+              <PasswordInput
+                id="root-password-confirm"
+                value={field.value || ''}
+                onChange={field.onChange}
+                autoComplete="off"
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   );
 }

@@ -48,6 +48,11 @@ import {
   importInstanceFromBackup,
 } from '@/app/(main)/instances/_lib/instances';
 import { toYaml, fromYaml } from '@/app/(main)/_lib/yaml';
+import {
+  CLOUD_INIT_USER_DATA_KEY,
+  getRootPasswordFromUserData,
+  setRootPasswordInUserData,
+} from '@/app/(main)/_lib/cloud-init';
 
 import GeneralConfiguration from '@/app/(main)/_components/general-configuration';
 import { useProfiles } from '@/app/(main)/_hooks/profiles';
@@ -98,20 +103,42 @@ const sourceSchema = z
     },
   );
 
-const formSchema = z.object({
-  // only letters, numbers, and dashes. cannot start with digit or dash. name must not end with dash
-  name: z
-    .string()
-    .min(3, 'Instance name must be at least 3 characters long')
-    .max(50, 'Instance name must be at most 50 characters long')
-    .regex(
-      /^[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]$/,
-      'Instance name must start with a letter and can only contain letters, numbers, and dashes. It cannot end with a dash.',
-    ),
-  description: z.string().optional(),
-  ephemeral: z.boolean().optional(),
-  source: sourceSchema,
-});
+const formSchema = z
+  .object({
+    // only letters, numbers, and dashes. cannot start with digit or dash. name must not end with dash
+    name: z
+      .string()
+      .min(3, 'Instance name must be at least 3 characters long')
+      .max(50, 'Instance name must be at most 50 characters long')
+      .regex(
+        /^[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]$/,
+        'Instance name must start with a letter and can only contain letters, numbers, and dashes. It cannot end with a dash.',
+      ),
+    description: z.string().optional(),
+    ephemeral: z.boolean().optional(),
+    source: sourceSchema,
+    rootPassword: z.string().optional(),
+    rootPasswordConfirm: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    // 'none' has no root filesystem and 'backup' keeps the source password,
+    // so only image builds need the password to be set and confirmed.
+    if (data.source.type === 'image' && !data.rootPassword?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'A root password is required',
+        path: ['rootPassword'],
+      });
+    }
+
+    if (data.rootPassword && data.rootPassword !== data.rootPasswordConfirm) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Passwords do not match',
+        path: ['rootPasswordConfirm'],
+      });
+    }
+  });
 export default function CreateInstance({ className }: { className?: string }) {
   const { currentProject, effectiveProject, projects } = use(ProjectsContext);
   const { resolvedTheme } = useTheme();
@@ -231,6 +258,8 @@ export default function CreateInstance({ className }: { className?: string }) {
         mode: undefined,
         protocol: undefined,
       },
+      rootPassword: undefined,
+      rootPasswordConfirm: undefined,
     },
   });
 
@@ -377,8 +406,24 @@ export default function CreateInstance({ className }: { className?: string }) {
       payload.ephemeral = values.ephemeral;
     }
 
-    if (Object.keys(config).length > 0) {
-      payload.config = config;
+    if (Object.keys(config).length > 0 || values.rootPassword?.trim()) {
+      const payloadConfig: Record<string, string> = { ...config };
+      const rootPassword = values.rootPassword?.trim() ?? '';
+
+      if (rootPassword) {
+        const mergedUserData = setRootPasswordInUserData(
+          payloadConfig[CLOUD_INIT_USER_DATA_KEY],
+          rootPassword,
+        );
+        if (mergedUserData === null) {
+          throw new Error(
+            `The existing "${CLOUD_INIT_USER_DATA_KEY}" value is not a #cloud-config document, so the root password cannot be added to it. Edit the YAML to remove or rewrite it.`,
+          );
+        }
+        payloadConfig[CLOUD_INIT_USER_DATA_KEY] = mergedUserData;
+      }
+
+      payload.config = payloadConfig;
     }
 
     return payload;
@@ -455,6 +500,14 @@ export default function CreateInstance({ className }: { className?: string }) {
         if (parsed.config && typeof parsed.config === 'object') {
           setConfig(parsed.config as Record<string, string>);
         }
+        // Keep the password fields in sync with hand-edited user-data so the
+        // wizard and the YAML editor never disagree about the root password.
+        const userDataFromYaml = (parsed.config as Record<string, string> | undefined)?.[
+          CLOUD_INIT_USER_DATA_KEY
+        ];
+        const rootPasswordFromYaml = getRootPasswordFromUserData(userDataFromYaml) ?? '';
+        form.setValue('rootPassword', rootPasswordFromYaml, { shouldValidate: true });
+        form.setValue('rootPasswordConfirm', rootPasswordFromYaml, { shouldValidate: true });
         if (parsed.source && typeof parsed.source === 'object') {
           const source = parsed.source as Record<string, unknown>;
           if (
@@ -576,6 +629,8 @@ export default function CreateInstance({ className }: { className?: string }) {
         setProfilesSelected(['default']);
         setInstanceType('container');
         setYamlContent('');
+        form.setValue('rootPassword', undefined);
+        form.setValue('rootPasswordConfirm', undefined);
         setCurrentTab('properties');
         setYamlError(null);
         setShowYamlEditor(false);

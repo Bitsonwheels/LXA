@@ -1,6 +1,6 @@
 {
   "name": "lxa",
-  "version": "3.0.0-beta.5",
+  "version": "3.0.0-beta.6",
   "description": "A modern web-based UI for managing Incus instances and servers.",
   "keywords": [
     "incus",
