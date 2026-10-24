@@ -22,10 +22,13 @@ import { PasswordInput } from '@/app/(main)/_components/root-password-field';
 export default function Security({
   instance,
   onMutate,
+  onDone,
   onBack,
 }: {
   instance: Instance;
   onMutate: () => Promise<void>;
+  /** Called after a successful save; the parent closes the dialog. */
+  onDone?: () => void | Promise<void>;
   onBack?: () => void;
 }) {
   const instanceConfig = React.useMemo(() => instance.config ?? {}, [instance.config]);
@@ -115,9 +118,8 @@ export default function Security({
         }
       }
 
-      await onMutate();
-      setRootPassword('');
-      setRootPasswordConfirm('');
+      // Success closes the dialog (onDone refreshes too); errors stay inline.
+      await (onDone ? onDone() : onMutate());
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
         return;
