@@ -284,7 +284,12 @@ export function InstanceActionsMenu({
           ) : null}
 
           {view === 'security' ? (
-            <Security instance={instance} onMutate={onMutate} onBack={() => setView('menu')} />
+            <Security
+              instance={instance}
+              onMutate={onMutate}
+              onDone={handleMutateAndClose}
+              onBack={() => setView('menu')}
+            />
           ) : null}
 
           {view === 'rebuild' ? (
