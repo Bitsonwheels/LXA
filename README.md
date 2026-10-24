@@ -4,7 +4,7 @@
 
 LXA provides a clean, intuitive dashboard for managing your Incus deployment. Whether you are running an old iMac in your closet or building a hyperscaler, LXA gives you the unified comprehensive control plane you need to take your infrastructure to its peak.
 
-**Current Release:** v3.0.0-beta.7
+**Current Release:** v3.0.0-beta.8
 
 **Community Forum:** [Incus Discourse](https://discuss.linuxcontainers.org/tag/ararat)
 
@@ -143,6 +143,11 @@ bun run build-install
 ```
 
 ## Changelog
+
+### v3.0.0-beta.8
+- Root passwords are no longer stored anywhere: the password is set directly on the running instance via exec (`chpasswd` on stdin, shell-quoted, never an argument), so the daemon configuration keeps no plaintext. Saving in the Security dialog also strips legacy plaintext entries left in `cloud-init.user-data` by earlier versions.
+- Security dialog: the fields now ask for a new password instead of showing the stored one, and the change applies immediately (the instance must be running; stopped instances get a clear error).
+- Create wizard: a root password entered at creation is applied right after the instance is created — the wizard starts the fresh instance and sets the password via exec (failures surface as a toast, creation itself stands).
 
 ### v3.0.0-beta.7
 - Instance CPU usage is correct now: CPU time is sampled on a fixed 5 second cadence (Incus pushes no events for state changes), percent deltas are measured between readings instead of store render times, and instances without `limits.cpu` normalize against the host core count. Closes #68.

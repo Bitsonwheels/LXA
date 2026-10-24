@@ -1,4 +1,5 @@
 import type { Device, Instance } from '@/app/(main)/instances/_lib/instances.d';
+import { buildChpasswdCommand } from '@/app/(main)/_lib/cloud-init';
 import type { BackgroundOperationResponse, StandardResponse } from '@/app/_lib/response.d';
 import { instanceKey } from '../../keys';
 import { resourceKeys } from '../../resources';
@@ -113,6 +114,7 @@ export async function waitForOperation(
       status?: string;
       status_code?: number;
       err?: string;
+      return?: number;
     }>>(`${waitUrl.pathname}${waitUrl.search}`, { init: { signal } });
     const metadata = response.metadata;
     if (metadata.status_code === 400 || metadata.status === 'Failure') {
@@ -126,7 +128,8 @@ export async function waitForOperation(
       metadata.status === 'Success' ||
       metadata.status === 'Done'
     ) {
-      return;
+      // exec operations signal the process exit code via metadata.return
+      return metadata;
     }
     // /wait returns the operation's CURRENT state when the server-side
     // timeout expires (e.g. 103 Running) — long backups on slow storage
@@ -141,7 +144,7 @@ export async function waitForOperation(
     ) {
       continue;
     }
-    return;
+    return metadata;
   }
 }
 
@@ -557,6 +560,65 @@ export function createInstanceActionsResource(
         },
         operation: response,
       };
+    },
+
+    /**
+     * Set the root password directly on the running guest via exec
+     * (`printf %s\n 'root:pw' | chpasswd`). Nothing is stored in daemon
+     * config; the password lives only in the exec argv of this one call.
+     * The guest must be running (VMs: the agent must be up — one retry).
+     */
+    setRootPassword: async ({
+      name,
+      project,
+      password,
+      signal,
+    }: {
+      name: string;
+      project: string;
+      password: string;
+      signal?: AbortSignal;
+    }) => {
+      const command = buildChpasswdCommand('root', password);
+      let lastError = 'Unable to set the root password on the instance.';
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          const response = await requestOperation(
+            `/1.0/instances/${encodeURIComponent(name)}/exec`,
+            {
+              params: projectParams(project),
+              init: {
+                method: 'POST',
+                signal,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  command,
+                  'wait-for-websocket': false,
+                }),
+              },
+            },
+          );
+          const final = await waitForOperation(
+            operationPath(response),
+            project,
+            signal,
+          );
+          if (final?.return) {
+            throw new Error('chpasswd reported a failure inside the guest.');
+          }
+          return final?.return ?? null;
+        } catch (error) {
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            throw error;
+          }
+          lastError = error instanceof Error ? error.message : String(error);
+          // VMs start the agent shortly after boot; give it one swing.
+        }
+        if (attempt === 0 && !signal?.aborted) {
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+        }
+      }
+      throw new Error(lastError);
     },
 
     updateMetadata: async ({

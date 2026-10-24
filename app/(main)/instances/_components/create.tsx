@@ -46,13 +46,10 @@ import {
 import {
   createInstance,
   importInstanceFromBackup,
+  setInstanceRootPassword,
+  startInstance,
 } from '@/app/(main)/instances/_lib/instances';
 import { toYaml, fromYaml } from '@/app/(main)/_lib/yaml';
-import {
-  CLOUD_INIT_USER_DATA_KEY,
-  getRootPasswordFromUserData,
-  setRootPasswordInUserData,
-} from '@/app/(main)/_lib/cloud-init';
 
 import GeneralConfiguration from '@/app/(main)/_components/general-configuration';
 import { useProfiles } from '@/app/(main)/_hooks/profiles';
@@ -406,24 +403,11 @@ export default function CreateInstance({ className }: { className?: string }) {
       payload.ephemeral = values.ephemeral;
     }
 
-    if (Object.keys(config).length > 0 || values.rootPassword?.trim()) {
-      const payloadConfig: Record<string, string> = { ...config };
-      const rootPassword = values.rootPassword?.trim() ?? '';
-
-      if (rootPassword) {
-        const mergedUserData = setRootPasswordInUserData(
-          payloadConfig[CLOUD_INIT_USER_DATA_KEY],
-          rootPassword,
-        );
-        if (mergedUserData === null) {
-          throw new Error(
-            `The existing "${CLOUD_INIT_USER_DATA_KEY}" value is not a #cloud-config document, so the root password cannot be added to it. Edit the YAML to remove or rewrite it.`,
-          );
-        }
-        payloadConfig[CLOUD_INIT_USER_DATA_KEY] = mergedUserData;
-      }
-
-      payload.config = payloadConfig;
+    if (Object.keys(config).length > 0) {
+      // The root password is intentionally NOT part of the payload: it is set
+      // via exec on the started guest (see handleSubmit), so it is never
+      // stored in the daemon configuration.
+      payload.config = { ...config };
     }
 
     return payload;
@@ -500,14 +484,6 @@ export default function CreateInstance({ className }: { className?: string }) {
         if (parsed.config && typeof parsed.config === 'object') {
           setConfig(parsed.config as Record<string, string>);
         }
-        // Keep the password fields in sync with hand-edited user-data so the
-        // wizard and the YAML editor never disagree about the root password.
-        const userDataFromYaml = (parsed.config as Record<string, string> | undefined)?.[
-          CLOUD_INIT_USER_DATA_KEY
-        ];
-        const rootPasswordFromYaml = getRootPasswordFromUserData(userDataFromYaml) ?? '';
-        form.setValue('rootPassword', rootPasswordFromYaml, { shouldValidate: true });
-        form.setValue('rootPasswordConfirm', rootPasswordFromYaml, { shouldValidate: true });
         if (parsed.source && typeof parsed.source === 'object') {
           const source = parsed.source as Record<string, unknown>;
           if (
@@ -602,6 +578,8 @@ export default function CreateInstance({ className }: { className?: string }) {
 
     setIsSubmitting(true);
     try {
+      const rootPassword = form.getValues().rootPassword?.trim() ?? '';
+      const instanceName = form.getValues().name;
       const result = isBackupMode
         ? await importInstanceFromBackup(selectedBackupFile as File, {
             name: form.getValues().name,
@@ -619,6 +597,28 @@ export default function CreateInstance({ className }: { className?: string }) {
             ? `Backup import for "${form.getValues().name}" started`
             : `Instance "${form.getValues().name}" creation started`,
         );
+
+        // The password must be set on the running guest, so start the fresh
+        // instance and apply it via exec. Failures surface, creation stands.
+        if (!isBackupMode && rootPassword && instanceName) {
+          try {
+            const project = resolvedTargetProject ?? 'default';
+            await startInstance(instanceName, project);
+            await setInstanceRootPassword({
+              name: instanceName,
+              project,
+              password: rootPassword,
+            });
+            toast.success(`Root password set on "${instanceName}"`);
+          } catch (error) {
+            toast.error(
+              error instanceof Error
+                ? `Instance created, but setting the root password failed: ${error.message}`
+                : 'Instance created, but setting the root password failed.',
+            );
+          }
+        }
+
         setDialogOpen(false);
         // Reset form
         form.reset();

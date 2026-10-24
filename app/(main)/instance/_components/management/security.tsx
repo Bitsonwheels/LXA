@@ -11,7 +11,10 @@ import {
   getRootPasswordFromUserData,
   setRootPasswordInUserData,
 } from '@/app/(main)/_lib/cloud-init';
-import { updateInstanceSettings } from '../../_lib/instance';
+import {
+  setRootPassword as execSetRootPassword,
+  updateInstanceSettings,
+} from '../../_lib/instance';
 import { ManagementFooter } from './footer';
 import { ManagementShell } from './shell';
 import { PasswordInput } from '@/app/(main)/_components/root-password-field';
@@ -26,39 +29,39 @@ export default function Security({
   onBack?: () => void;
 }) {
   const instanceConfig = React.useMemo(() => instance.config ?? {}, [instance.config]);
-
-  // expanded_config already folds in the profiles, so it is the effective
-  // password the guest currently boots with.
   const currentUserData = React.useMemo(
     () => instance.expanded_config?.[CLOUD_INIT_USER_DATA_KEY] ?? instanceConfig[CLOUD_INIT_USER_DATA_KEY],
     [instance.expanded_config, instanceConfig],
   );
-  const currentRootPassword = React.useMemo(
-    () => getRootPasswordFromUserData(currentUserData) ?? '',
+  // Older instances kept the root password as plaintext in the user-data.
+  // Saving the new exec-based password also strips that legacy entry.
+  const hasLegacyPlaintextEntry = React.useMemo(
+    () => getRootPasswordFromUserData(currentUserData) !== undefined,
     [currentUserData],
   );
 
-  const [rootPassword, setRootPassword] = React.useState(currentRootPassword);
-  const [rootPasswordConfirm, setRootPasswordConfirm] = React.useState(currentRootPassword);
+  const [rootPassword, setRootPassword] = React.useState('');
+  const [rootPasswordConfirm, setRootPasswordConfirm] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
   const lastInstanceNameRef = React.useRef<string | null>(null);
   const saveAbortControllerRef = React.useRef<AbortController | null>(null);
 
-  const isDirty = rootPassword !== currentRootPassword;
+  const isRunning = instance.status === 'Running';
+  const isDirty = rootPassword.trim().length > 0;
   const confirmMismatch = rootPassword !== rootPasswordConfirm;
 
-  // Follow the house pattern: a server-side config change resets the draft,
-  // but never while the user has unsaved edits.
+  // A server-side instance switch resets the draft, but never while the user
+  // has unsaved edits.
   React.useEffect(() => {
     const instanceChanged = lastInstanceNameRef.current !== instance.name;
 
     if (!instanceChanged && isDirty) return;
 
     lastInstanceNameRef.current = instance.name;
-    setRootPassword(currentRootPassword);
-    setRootPasswordConfirm(currentRootPassword);
-  }, [currentRootPassword, instance.name, isDirty]);
+    setRootPassword('');
+    setRootPasswordConfirm('');
+  }, [instance.name, isDirty]);
 
   React.useEffect(() => {
     return () => {
@@ -67,8 +70,8 @@ export default function Security({
   }, []);
 
   const handleCancel = () => {
-    setRootPassword(currentRootPassword);
-    setRootPasswordConfirm(currentRootPassword);
+    setRootPassword('');
+    setRootPasswordConfirm('');
   };
 
   const handleSave = async () => {
@@ -81,27 +84,40 @@ export default function Security({
       const abortController = new AbortController();
       saveAbortControllerRef.current = abortController;
 
-      const nextUserData = setRootPasswordInUserData(currentUserData, rootPassword);
-      if (nextUserData === null) {
-        setSaveError(
-          `The existing "${CLOUD_INIT_USER_DATA_KEY}" value is not a #cloud-config document, so the root password cannot be added to it. Edit the instance YAML to remove or rewrite it.`,
-        );
+      if (!isRunning) {
+        setSaveError('The instance must be running so the password can be set directly on it. Start it first.');
         return;
       }
 
-      const nextConfig = { ...instanceConfig };
-      if (nextUserData) {
-        nextConfig[CLOUD_INIT_USER_DATA_KEY] = nextUserData;
-      } else {
-        delete nextConfig[CLOUD_INIT_USER_DATA_KEY];
-      }
-
-      await updateInstanceSettings({
-        instance,
-        nextConfig,
+      const trimmed = rootPassword.trim();
+      await execSetRootPassword({
+        name: instance.name,
+        project: instance.project ?? 'default',
+        password: trimmed,
         signal: abortController.signal,
       });
+
+      // Migrate away from the old plaintext-in-user-data approach.
+      if (hasLegacyPlaintextEntry) {
+        const nextUserData = setRootPasswordInUserData(currentUserData, '');
+        if (nextUserData !== null) {
+          const nextConfig = { ...instanceConfig };
+          if (nextUserData) {
+            nextConfig[CLOUD_INIT_USER_DATA_KEY] = nextUserData;
+          } else {
+            delete nextConfig[CLOUD_INIT_USER_DATA_KEY];
+          }
+          await updateInstanceSettings({
+            instance,
+            nextConfig,
+            signal: abortController.signal,
+          });
+        }
+      }
+
       await onMutate();
+      setRootPassword('');
+      setRootPasswordConfirm('');
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
         return;
@@ -132,25 +148,22 @@ export default function Security({
       <div className="space-y-4 py-1">
         <Alert>
           <InfoIcon className="size-4" />
-          <AlertTitle>Takes effect on next boot</AlertTitle>
+          <AlertTitle>Applies immediately</AlertTitle>
           <AlertDescription>
-            Cloud-init applies the user-data when the instance boots, so the new
-            root password takes effect on the next start.
+            The password is set directly on the running instance and is not
+            stored in the UI or in the instance configuration.
           </AlertDescription>
         </Alert>
 
         <Field>
-          <FieldLabel htmlFor="instance-root-password">Root Password</FieldLabel>
+          <FieldLabel htmlFor="instance-root-password">New Root Password</FieldLabel>
           <PasswordInput
             id="instance-root-password"
             value={rootPassword}
             onChange={setRootPassword}
             disabled={isSaving}
           />
-          <FieldDescription>
-            Prefilled from the cloud-init user-data of this instance. Leave it
-            empty to remove the root password.
-          </FieldDescription>
+          <FieldError>{!isRunning ? 'The instance is not running.' : undefined}</FieldError>
         </Field>
 
         <Field>

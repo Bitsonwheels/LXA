@@ -149,7 +149,9 @@ export default function InstanceProperties({
               />
             </FormControl>
             <p className="text-muted-foreground text-sm">
-              Applied to the root user on first boot via cloud-init. Change it later under
+              Set directly on the guest right after creation (the instance is
+              started for it) and not stored in the configuration. Change it
+              later under
               Manage &gt; Security.
             </p>
             <FormMessage />

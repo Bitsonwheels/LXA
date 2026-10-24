@@ -49,6 +49,31 @@ function chpasswdListEntries(chpasswd: unknown): string[] {
 }
 
 /**
+ * Build the guest-side argv for an Incus exec that sets a password directly on
+ * the running instance. The secret never lands in daemon config: it lives only
+ * inside the `sh -c` argv of the exec call (`printf %s\n user:pw | chpasswd`),
+ * and argv is not argv: we pipe through stdin, so no password argument.
+ *
+ * printf over echo: echo interprets leading '-' and some escapes; printf %s
+ * sends the line to chpasswd verbatim. Guests always provide `sh`.
+ */
+export function buildChpasswdCommand(user: string, password: string): string[] {
+  if (/[\r\n]/.test(password)) {
+    throw new Error('The password must not contain line breaks.');
+  }
+  return [
+    'sh',
+    '-c',
+    `printf '%s\\n' ${shellQuoteSh(`${user}:${password}`)} | chpasswd`,
+  ];
+}
+
+/** Single-quote for POSIX shell: an embedded ' becomes `'\''`. */
+function shellQuoteSh(value: string): string {
+  return `'${value.replaceAll("'", `'\\''`)}'`;
+}
+
+/**
  * Read the root password out of a cloud-init `chpasswd` list.
  * Returns undefined when the blob has no root entry (unknown / unset password).
  */
@@ -98,6 +123,9 @@ export function setRootPasswordInUserData(
     if (keptEntries.length === 0) {
       const rest = { ...existing } as Record<string, unknown>;
       delete rest.chpasswd;
+      // Nothing of ours left: drop the user-data entirely (empty string makes
+      // callers delete the config key).
+      if (Object.keys(rest).length === 0) return '';
       return serializeUserData(rest);
     }
 

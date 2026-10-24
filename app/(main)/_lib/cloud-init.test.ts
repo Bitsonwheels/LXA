@@ -1,6 +1,7 @@
 import {
   getRootPasswordFromUserData,
   setRootPasswordInUserData,
+  buildChpasswdCommand,
   CLOUD_INIT_USER_DATA_KEY,
 } from './cloud-init';
 
@@ -77,6 +78,11 @@ const clearedText = cleared as string;
 assert(getRootPasswordFromUserData(clearedText) === undefined, 'clearing removes the root password');
 assert(clearedText.includes('package_update: true'), 'clearing keeps the rest of the config');
 
+// 5b. Clearing the LAST owned entry drops the whole user-data (empty string),
+// so callers can remove the config key instead of leaving `#cloud-config\n{}`.
+const onlyRoot = setRootPasswordInUserData(undefined, 'temp');
+assert(setRootPasswordInUserData(onlyRoot as string, '') === '', 'clearing the only entry must empty the blob');
+
 // 6. A non cloud-config blob (script) is never rewritten.
 const script = '#!/bin/sh\necho hello';
 assert(
@@ -121,6 +127,32 @@ assert(
   CLOUD_INIT_USER_DATA_KEY === 'cloud-init.user-data',
   'the user-data key must match the Incus config key',
 );
+
+// 9. exec-based password setting: shell-safe argv, no plaintext storage.
+const cmd = buildChpasswdCommand('root', "it's:sec-ret");
+assert(cmd.length === 3, 'the chpasswd command must be a plain argv array');
+assert(cmd[0] === 'sh' && cmd[1] === '-c', 'the command runs through sh -c');
+assert(
+  cmd[2].startsWith(`printf '%s\\n' `),
+  'printf must send the chpasswd line verbatim',
+);
+assert(cmd[2].endsWith('| chpasswd'), 'the password must be piped into chpasswd');
+assert(
+  cmd[2].includes("root:it'\\''s:sec-ret"),
+  'single quotes inside the password must be escaped as backslash-quote',
+);
+// Every original quote must be inside an escape sequence, nothing left bare:
+const evil = buildChpasswdCommand('root', "x'; rm -rf /; echo '");
+assert(
+  evil[2].split(`'\\''`).length - 1 === 2,
+  'injection quotes must be escaped (2 embedded single quotes)',
+);
+try {
+  buildChpasswdCommand('root', 'a\nb');
+  assert(false, 'line breaks must be rejected');
+} catch {
+  // expected
+}
 
 if (failures > 0) {
   console.error(`${failures} check(s) failed`);

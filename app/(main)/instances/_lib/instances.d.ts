@@ -95,7 +95,7 @@ export interface CreateInstanceBody {
     mode?: 'pull';
     protocol?: 'simplestreams' | 'oci';
   };
-  /** Wired to cloud-init user-data; never sent as a plain field. */
+  /** Wizard-only: applied via exec on the started guest, never sent to the API. */
   rootPassword?: string;
   rootPasswordConfirm?: string;
 }

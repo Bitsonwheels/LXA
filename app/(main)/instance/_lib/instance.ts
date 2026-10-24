@@ -130,4 +130,15 @@ export async function updateInstanceSettings(input: UpdateInstanceSettingsInput)
   return getBrowserIncusClient().instances.updateSettings(input);
 }
 
+export async function setRootPassword(input: {
+  name: string;
+  project: string;
+  password: string;
+  signal?: AbortSignal;
+}) {
+  // Runs `printf %s\n 'root:pw' | chpasswd` inside the guest via exec.
+  // Nothing is stored in daemon config.
+  return getBrowserIncusClient().instances.setRootPassword(input);
+}
+
 export type { BackgroundOperationResponse };

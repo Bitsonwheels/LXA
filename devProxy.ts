@@ -36,8 +36,10 @@ const LISTENER_MODE = parseListenerMode(process.env.DEV_PROXY_LISTENER_MODE);
 const API_HTTP_TARGET = getHttpTargetUrl(API_TARGET).toString();
 const API_WS_TARGET = getWsTargetUrl(API_TARGET).toString();
 
-const APP_HTTP_TARGET = 'http://localhost:3000';
-const APP_WS_TARGET = 'ws://localhost:3000';
+const APP_HTTP_TARGET =
+  process.env.DEV_PROXY_APP_TARGET ?? 'http://localhost:3000';
+const APP_WS_TARGET =
+  process.env.DEV_PROXY_APP_TARGET?.replace(/^http/, 'ws') ?? 'ws://localhost:3000';
 const CROSS_ORIGIN_ISOLATION_ENABLED =
   process.env.DEV_PROXY_CROSS_ORIGIN_ISOLATION === '1';
 
