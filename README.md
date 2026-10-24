@@ -144,6 +144,9 @@ bun run build-install
 
 ## Changelog
 
+### v3.0.0-beta.9
+- Console: suppress persistent toast notifications for operations targeting the instance currently being viewed (e.g. console connections). A loading toast on an open console page is pure noise since the page already reflects the connection state. Closes #261.
+
 ### v3.0.0-beta.8
 - Root passwords are no longer stored anywhere: the password is set directly on the running instance via exec (`chpasswd` on stdin, shell-quoted, never an argument), so the daemon configuration keeps no plaintext. Saving in the Security dialog also strips legacy plaintext entries left in `cloud-init.user-data` by earlier versions.
 - Security dialog: the fields now ask for a new password instead of showing the stored one, and the change applies immediately (the instance must be running; stopped instances get a clear error).
