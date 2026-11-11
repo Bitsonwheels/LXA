@@ -165,10 +165,15 @@ function isInstanceResourcePath(path: string) {
   return path.startsWith('/1.0/instances/');
 }
 
-// Suppress toasts for operations whose target resource is already being viewed
-// on the current page. Long-running operations (e.g. console connections) stay
-// "Running" for the session's lifetime, so a loading toast there is persistent
-// noise — the page already reflects the operation's progress.
+// Suppress toasts for console connections to the instance whose console page
+// the user is currently viewing. Incus creates console connections as
+// operations of class "websocket" (OperationClassWebsocket, see
+// cmd/incusd/instance_console.go); they stay "Running" for the connection's
+// lifetime, so a loading toast there is persistent noise — the page already
+// shows the console. Every other operation on that instance (snapshots, state
+// changes, file uploads) keeps its toast: those operations carry the very same
+// instance resource path, so the operation class is the only thing that tells a
+// console connection apart from unrelated work on the same instance.
 export function isOperationOnViewedResource(
   op: OperationMetadata,
   rawPathname: string,
@@ -179,6 +184,7 @@ export function isOperationOnViewedResource(
   // includes that prefix in production, so strip it before matching routes.
   const pathname = rawPathname.replace(/^\/ui(?=\/|$)/, '');
   if (!pathname.startsWith('/instance/console')) return false;
+  if (op.class !== 'websocket') return false;
 
   const instanceResourcePrefix = `/1.0/instances/${encodeURIComponent(instanceName)}`;
   return getResourcePaths(op.resources).some(
@@ -290,9 +296,9 @@ export function EventEmitterProvider({ children }: { children: React.ReactNode }
       const description = op.description || 'Operation';
       const isTerminalStatus = TERMINAL_OPERATION_STATUSES.has(op.status);
 
-      // Skip toasts for operations on resources the user is already viewing
-      // (e.g. console connections on the console page). These operations are
-      // inherently visible in the active view, so a notification adds noise.
+      // Skip toasts for console connections to the instance whose console page
+      // is being viewed — the console itself already shows that connection.
+      // Unrelated operations on the same instance still notify.
       const currentInstance = new URLSearchParams(window.location.search).get('name');
       if (isOperationOnViewedResource(op, window.location.pathname, currentInstance)) {
         return;
