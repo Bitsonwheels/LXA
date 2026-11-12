@@ -46,12 +46,12 @@ function keyDarkBackground({ data, width, height }: Awaited<ReturnType<typeof lo
 }
 
 // Sidebar wordmarks: crop to content, keep a 128px tall bitmap for crisp retina.
-function wordmark(source: sharp.Sharp) {
+function wordmark(source: ReturnType<typeof sharp>) {
   return source.trim({ threshold: 12 }).resize({ height: 128, fit: 'inside' }).png();
 }
 
 // Favicons: square 256px canvas, transparent padding, wordmark centered.
-async function squareFavicon(source: sharp.Sharp): Promise<Buffer> {
+async function squareFavicon(source: ReturnType<typeof sharp>): Promise<Buffer> {
   const trimmed = await source.trim({ threshold: 12 }).png().toBuffer();
   const { width = 0, height = 0 } = await sharp(trimmed).metadata();
   const scale = (256 - 24) / Math.max(width, height);

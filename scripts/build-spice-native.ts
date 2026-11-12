@@ -181,7 +181,7 @@ async function main() {
       env: {
         ...Bun.env,
         RUSTFLAGS: [Bun.env.RUSTFLAGS, nativeRustFlags].filter(Boolean).join(' '),
-      },
+      } as unknown as Record<string, string | undefined>,
       stdout: 'inherit',
       stderr: 'inherit',
     });
